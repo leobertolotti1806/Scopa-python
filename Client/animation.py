@@ -2,8 +2,6 @@ import threading
 import sys
 from time import *
 
-lock = threading.Lock()
-
 class AnimationCard:
 
     thread = None
@@ -35,6 +33,8 @@ class AnimationText:
     thread = None
 
     def __init__(self, root, lbl, duration, frames):
+        self.stop = False
+        self.finish = [False]
         self.root = root
         self.lbl = lbl
         self.duration = duration
@@ -47,13 +47,18 @@ class AnimationText:
             try:
                 self.lbl.configure(text=self.frames[self.index])
             except:
+                self.finish = [True]
                 return
         self.index += 1
         if(self.index == len(self.frames)):
             self.index = 0
+        if(self.stop == False):
             self.root.after(self.duration, self.animate)
+        else:
+            self.finish = [True]
+            return
 
-    def wait(self):
+    def waitStop(self):
         self.stop = True
             
         

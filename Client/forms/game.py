@@ -16,8 +16,8 @@ class Game:
         self.frame = customtkinter.CTkFrame(master=root,  fg_color=BACK_COLOR)
         self.frame.grid(row = 0, column = 0)
         self.frame.pack(fill="both", expand=True)
-        self.frame.grid_rowconfigure(1, weight=1)
-        self.frame.grid_columnconfigure(1, weight=1)
+        """ self.frame.grid_rowconfigure(1, weight=1)
+        self.frame.grid_columnconfigure(1, weight=1) """
 
         image = customtkinter.CTkImage(Image.open("media/logoBack.png"), size=(140, 40))
         self.lbl = customtkinter.CTkLabel(
@@ -26,7 +26,7 @@ class Game:
             text=""
         )
 
-        self.lbl.grid(row=1, column=1)
+        self.lbl.place(x=centerX(), y=centerY(), anchor="center")
         
         self.msgBox = MessageBox(root=self.frame)
         #client.waitForGame(self.user, self.InitGame, self.Error)
@@ -38,6 +38,7 @@ class Game:
         self.InitGame(
             {
                 "request": "startGame",
+                "user2" : "ciasky",
                 "startingTurn": True,
                 "table": [],
                 "cards": ["C1", "B2", "D4"]
@@ -46,15 +47,29 @@ class Game:
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
     def InitGame(self, obj):
-        self.animation.wait()
+        self.animation.waitStop()
         self.msgBox.close()
-        self.frameGame = customtkinter.CTkFrame(master=self.frame, bg_color='black', fg_color='transparent')
-        self.frameGame.grid(row=1, column=1, sticky='w')
+
+        self.user2 = obj['user2']
+
+        self.lbluser1 = customtkinter.CTkLabel(master=self.frame, text=self.user, text_color=WHITE, font=default_font_subtitle())
+        self.lbluser1.place(x=30, y=R_HEIGHT - 50, anchor="sw")
+        self.lblstatus1 = customtkinter.CTkLabel(master=self.frame, text_color=DARK_GRAY, font=default_font_medium())
+        self.lblstatus1.place(x = 30, y = R_HEIGHT - 20, anchor="sw")
+
+        self.lbluser2 = customtkinter.CTkLabel(master=self.frame, text=self.user2, text_color=WHITE, font=default_font_subtitle())
+        self.lbluser2.place(x= R_WIDTH - 30, y= 10, anchor="ne")
+        self.lblstatus2 = customtkinter.CTkLabel(master=self.frame, text_color=DARK_GRAY, font=default_font_medium())
+        self.lblstatus2.place(x = R_WIDTH - 30, y = 60, anchor="ne")
+
+        #set turno
         client.turn = obj['startingTurn']
+        self.setStatus()
+
         #carte.cliccabili = client.turn #so che fa schifo ma è per fare la struttura
         self.BuildDrawCard(obj['cards'])
         #self.BuildTable(obj['table'])
-        client.clickCard(obj)
+        #client.clickCard(obj)
             
     def Error(self, msg):
         self.animation.stop = True
@@ -62,15 +77,37 @@ class Game:
 
     def BuildDrawCard(self, card):
         for i in range(len(card)):
-            img = customtkinter.CTkImage(Image.open(f"media/cards/{card[i]}.png"), size=(75, 120))
-            self.cards_hand.append(
-                customtkinter.CTkLabel(
-                    master=self.frameGame,
-                    text="",
-                    image = img,
-                    anchor = "center",
-                ).pack(padx=10, pady=10 )
+            img = customtkinter.CTkImage(Image.open(f"media/cards/{card[i]}.png"), size=CARDS_HAND_SIZE)
+            w_card = customtkinter.CTkLabel(
+                master=self.frame,
+                text="",
+                image = img,
+                anchor = "center",
             )
+            w_card.bind("<Button-1>", client.clickCard)
+            w_card.place(x=POS_CARDS_HAND[i][0], y=POS_CARDS_HAND[i][1], anchor="center")
+            self.cards_hand.append(
+                w_card
+            )
+
+    def setStatus(self):
+        if(self.animation.thread.is_alive()):
+            self.animation.waitStop()
+        if(client.turn):
+            self.lblstatus2.configure(text="")
+            self.animation = animation.AnimationText(self.root, self.lblstatus1, 300, [
+                "Fai la tua mossa.  ",
+                "Fai la tua mossa.. ",
+                "Fai la tua mossa..."
+            ])
+        else:
+            self.lblstatus1.configure(text="")
+            self.animation = animation.AnimationText(self.root, self.lblstatus2, 300, [
+                "Sta pensando 😐",
+                "Sta pensando 🤨",
+                "Sta pensando 🤔"
+            ])
+            
 
 
 

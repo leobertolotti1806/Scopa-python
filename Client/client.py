@@ -55,7 +55,8 @@ def connect(nickname, resolver, error):
 turn = False
 
 
-def clickCard(obj):
+def clickCard(event):
+    print(event.widget)
     pass
     """ if turn:
         if possofaremossa:
