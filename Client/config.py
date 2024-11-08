@@ -40,6 +40,7 @@ class MessageBox:
 
     def close(self):
         self.frame.destroy()
+        
 
 
 

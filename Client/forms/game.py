@@ -1,7 +1,7 @@
 from config import *
 # modulo con le funzioni per il funzionamento del gioco
 import client
-from animation import *
+import animation
 
 class Game:
 
@@ -29,27 +29,33 @@ class Game:
         self.lbl.grid(row=1, column=1)
         
         self.msgBox = MessageBox(root=self.frame)
-        client.waitForGame(self.user, self.InitGame, self.Error)
-        self.animation = AnimationText(self.root, self.msgBox.lbl, 300, [
+        #client.waitForGame(self.user, self.InitGame, self.Error)
+        self.animation = animation.AnimationText(self.root, self.msgBox.lbl, 300, [
             "In attesa di un giocatore.  ",
             "In attesa di un giocatore.. ",
             "In attesa di un giocatore..."
         ])
+        self.InitGame(
+            {
+                "request": "startGame",
+                "startingTurn": True,
+                "table": [],
+                "cards": ["C1", "B2", "D4"]
+            }
+        )
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
     def InitGame(self, obj):
-        self.animation.stop = True
+        self.animation.wait()
         self.msgBox.close()
-        self.frameGame = customtkinter.CTkFrame(master=self.frame, height=550, width=700, bg_color='black', fg_color='transparent')
-        self.frameGame.grid(row=1, column=1)
+        self.frameGame = customtkinter.CTkFrame(master=self.frame, bg_color='black', fg_color='transparent')
+        self.frameGame.grid(row=1, column=1, sticky='w')
         client.turn = obj['startingTurn']
         #carte.cliccabili = client.turn #so che fa schifo ma è per fare la struttura
         self.BuildDrawCard(obj['cards'])
         #self.BuildTable(obj['table'])
         client.clickCard(obj)
             
-        
-
     def Error(self, msg):
         self.animation.stop = True
         self.msgBox.error(msg)
@@ -63,8 +69,6 @@ class Game:
                     text="",
                     image = img,
                     anchor = "center",
-                    bg_color="transparent",
-                    fg_color="transparent"
                 ).pack(padx=10, pady=10 )
             )
 
