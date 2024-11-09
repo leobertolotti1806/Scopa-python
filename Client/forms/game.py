@@ -2,6 +2,7 @@ from config import *
 # modulo con le funzioni per il funzionamento del gioco
 import client
 import animation
+from card import *
 
 class Game:
 
@@ -78,14 +79,14 @@ class Game:
     def BuildDrawCard(self, card):
         for i in range(len(card)):
             img = customtkinter.CTkImage(Image.open(f"media/cards/{card[i]}.png"), size=CARDS_HAND_SIZE)
-            w_card = customtkinter.CTkLabel(
+            w_card = Card(
                 master=self.frame,
                 text="",
                 image = img,
                 anchor = "center",
+                value=card[i],
+                root=self.root
             )
-            w_card.bind("<Button-1>", client.clickCard)
-            w_card.place(x=POS_CARDS_HAND[i][0], y=POS_CARDS_HAND[i][1], anchor="center")
             self.cards_hand.append(
                 w_card
             )

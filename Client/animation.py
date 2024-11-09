@@ -2,29 +2,25 @@ import threading
 import sys
 from time import *
 
-class AnimationCard:
+class Rect:
 
-    thread = None
-    card = None
     m = None
     q = None
-    x = 0
-    duration = 100,
 
-    def __init__(self, card, p1, p2):
-        self.card = card
+    def __init__(self, p1, p2):
+        self.error = False
         self.getMQ(p1, p2)
 
     def getMQ(self, p1, p2):
-        self.m = (p1[0] - p2[1]) / (p1[1] - p2[1])
-        self.q = p1[1] - (self.m * p1[0])
+        self.error = False
+        if(p1[0] - p2[0] != 0):
+            self.m = (p1[1] - p2[1]) / (p1[0] - p2[0])
+            self.q = p1[1] - (self.m * p1[0])
+        else :
+            self.error = True
 
-    def Start(self):
-        self.thread = threading.Thread(target=self.Move, args=(self)).start()
-        
-    def Move():
-        while True:
-            sleep(10)
+    def getY(self, x):
+        return (x * self.m) + self.q
 
 class AnimationText:
 
