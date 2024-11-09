@@ -1,6 +1,5 @@
 import socket
 import threading
-
 import json
 
 # DA OGGETTO A STRINGA
@@ -25,6 +24,16 @@ def riceviJson(qta = 1024):
 
 def inviaJSON(messaggio):
     client.send(stringifyObject(messaggio).encode())
+
+def chiusura(root):
+    if waitMoveThread.is_alive():
+        #HO ANCORA IL THREAD CONNESSO AL SERVER
+        #SE HAI PROBLEMI E PER FACILITARTI LA VITA DEVI CAMBIARE QUESTA IF
+        #PUOI VERIFICARE SE IL CLIENT E' ANCORA CONNESSO AL SERVER 
+        inviaJSON({"request": "closingClient"})
+
+    root.destroy()
+
 
 #Host = "172.27.128.1" MAXWELL PC LEO
 #Host = "192.168.178.24" PC LEO CASA
@@ -51,21 +60,61 @@ def connect(nickname, resolver, error):
         client.close()
         error(f'Impossibile Collegarsi al Server\n\n({e})')
 
+lock = threading.Lock()
+
+def waitMove():
+    global enemyMove
+    stop = False
+
+    while not stop:
+        with lock:
+            enemyMove = riceviJson()
+
+            match enemyMove["request"]:
+                case "endGameError":
+                    stop = True
+                    #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                    #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                    #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                    break
+                case "closeWindow":
+                    stop = True
+                    client.close()
+                    break
+                case "calculatePoints":
+                    stop = True
+                        #showPoints()
+                        #showPoints()
+                        #showPoints()
+                        #showPoints()
+                        #showPoints()
+                        #showPoints()
+                    break
+                case "ALTRI CASI DOVE IL GIOCO FUNZIONA":
+                    turn = True
+                    mainGame()
+                    break
 
 turn = False
+waitMoveThread = threading.Thread(target=waitMove)
+enemyMove = {}
+
+def mainGame():
+    #carte.cliccabili = turn so che fa schifo ma è per fare la struttura
+    if turn:
+        pass
+        #faccio mossa
 
 
 def clickCard(card):
     print(card.value)
     card.move((90, 300))
-    pass
-    """ if turn:
-        if possofaremossa:
-            turn = not turn
-            inviaJSON({mossa})
-            mossa = riceviJson()
-    else:
-        turn = not turn """
+
+    if turn:
+        """ if possofaremossa:
+            turn = False
+            mossa = {"C1","C2","C3"}#metti poi le carte che si seleziona
+            inviaJSON({mossa}) """
         #TUTTO IL CODICE STA DENTRO SE E' IL MIO TURNO
         #FAI FUNZIONE CHE CERCA E TROVA TUTTE LE COMBINAZIONI DELLE MOSSE POSSIBILI CON LA CARTA CHE SELEZIONI DAL TUO MAZZP
         #FAI FUNZIONE CHE CERCA E TROVA TUTTE LE COMBINAZIONI DELLE MOSSE POSSIBILI CON LA CARTA CHE SELEZIONI DAL TUO MAZZP

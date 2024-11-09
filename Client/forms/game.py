@@ -30,13 +30,13 @@ class Game:
         self.lbl.place(x=centerX(), y=centerY(), anchor="center")
         
         self.msgBox = MessageBox(root=self.frame)
-        #client.waitForGame(self.user, self.InitGame, self.Error)
+        client.waitForGame(self.user, self.InitGame, self.Error)
         self.animation = animation.AnimationText(self.root, self.msgBox.lbl, 300, [
             "In attesa di un giocatore.  ",
             "In attesa di un giocatore.. ",
             "In attesa di un giocatore..."
         ])
-        self.InitGame(
+        """ self.InitGame(
             {
                 "request": "startGame",
                 "user2" : "ciasky",
@@ -45,6 +45,8 @@ class Game:
                 "cards": ["C1", "B2", "D4"]
             }
         )
+ """
+        root.master.protocol("WM_DELETE_WINDOW", lambda: client.chiusura(root.master))
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
     def InitGame(self, obj):
@@ -67,10 +69,12 @@ class Game:
         client.turn = obj['startingTurn']
         self.setStatus()
 
-        #carte.cliccabili = client.turn #so che fa schifo ma è per fare la struttura
         self.BuildDrawCard(obj['cards'])
         #self.BuildTable(obj['table'])
         #client.clickCard(obj)
+        client.waitMoveThread.start()
+        
+        client.mainGame()
             
     def Error(self, msg):
         self.animation.stop = True

@@ -22,5 +22,4 @@ frame.pack(fill='both', expand=True)
 # il gioco parte dal login
 Login(frame)
 
-
 root.mainloop()

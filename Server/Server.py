@@ -6,7 +6,6 @@ import random
 # DA OGGETTO A STRINGA
 def stringifyObject(obj):
     try:
-        # Converte l'oggetto in una stringa JSON
         stringa_json = json.dumps(obj)
         return stringa_json
     except (TypeError, ValueError) as e:
@@ -16,10 +15,9 @@ def stringifyObject(obj):
 # DA STRINGA A OGGETTO
 def parseObject(stringa):
     try:
-        # Converte la stringa JSON in un oggetto Python
         obj = json.loads(stringa)
         return obj
-    except (json.JSONDecodeError, TypeError) as e:
+    except  (json.JSONDecodeError, TypeError) as e:
         print(f"Errore nella conversione della stringa in oggetto: {e}")
         return None
 
@@ -88,7 +86,6 @@ def avviaServer():
     while True:
         #accetto la connessione
         client, addr = server.accept()
-
         threading.Thread(target=matchClient, args = (client, addr)).start()
 
         
@@ -109,18 +106,20 @@ def partita(client1, client2, mazzo):
         "request": "startGame",
         "startingTurn": True,
         "table": tavolo,
-        "cards": pesca(mazzo, 3)
+        "cards": pesca(mazzo, 3),
+        "user2": client2['nome']
         }, c1)
 
     inviaJSON({
         "request": "startGame",
         "startingTurn": False,
         "table": tavolo,
-        "cards": pesca(mazzo, 3)
+        "cards": pesca(mazzo, 3),
+        "user2": client1['nome']
         }, c2)
 
-    t1 = threading.Thread(target=mosse, args=(c1, c2, nMosse, mazzo, score1))
-    t2 = threading.Thread(target=mosse, args=(c2, c1, nMosse, mazzo, score2))
+    t1 = threading.Thread(target=mosse, args=(c1, c2, nMosse, mazzo, score1, client1['nome']))
+    t2 = threading.Thread(target=mosse, args=(c2, c1, nMosse, mazzo, score2, client2['nome']))
 
     t1.start()
     t2.start()
@@ -129,20 +128,26 @@ def partita(client1, client2, mazzo):
     t1.join()
     t2.join()
 
-    if score1["win"]:
-        vincitore = "Giocatore 1 ha vinto!"
-    elif score2["win"]:
-        vincitore = "Giocatore 2 ha vinto!"
-    else:
-        vincitore = "Pareggio!"
+    if score1 and score2:
+        #ho dei punteggi senza aver avuto errori / chiusure
+        if score1["win"]:
+            vincitore = "Giocatore 1 ha vinto!"
+        elif score2["win"]:
+            vincitore = "Giocatore 2 ha vinto!"
+        else:
+            vincitore = "Pareggio!"
 
-    inviaJSON({
-        "request": "endGame", 
-        "msg": vincitore
-        }, [c1, c2])
+        inviaJSON({
+            "request": "endGame", 
+            "msg": vincitore
+            }, [c1, c2])
 
     c1.close()
     c2.close()
+
+    clients.remove(client1)
+    clients.remove(client2)
+    print("FINISCO THREAD PARTITA")
 
 def pesca(mazzo, nCarte):
     carteScelte = random.sample(mazzo, nCarte)
@@ -152,48 +157,38 @@ def pesca(mazzo, nCarte):
 
     return carteScelte
 
-def mosse(client, clientAvversario, nMosse, mazzo, score):
-    
-    while nMosse[0] < 30:
+def mosse(client, clientAvversario, nMosse, mazzo, score, nome):
+    err = False
+
+    while not err and nMosse[0] < 30:
         # Riceve la mossa dal giocatore attuale
         mossa = riceviJSON(client)
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
-        #FAI TRY PARSE IN RICEVI JSON COSI SE CHIUDI IL CLIENT NON SI PIANTA
         print(f"Mossa ricevuta: {mossa}")
 
-        # Invia la mossa all'altro giocatore
-        inviaJSON({
-            "request": "enemyMove",
-            "move": mossa["carta"]
-            }, clientAvversario)
+        if mossa["request"] != "closingClient":
+            # Invia la mossa all'altro giocatore
+            inviaJSON({
+                "request": "enemyMove",
+                "move": mossa["carta"]
+                }, clientAvversario)
 
-        with lock:
-            nMosse[0] += 1
+            with lock:
+                nMosse[0] += 1
 
-            # Ogni 6 mosse termina il round
-            if nMosse % 6 == 0:
-                inviaJSON({
-                    "request": "newCards",
-                    "carte": pesca(mazzo, 3)
-                    }, client)
+                # Ogni 6 mosse termina il round
+                if nMosse % 6 == 0:
+                    inviaJSON({
+                        "request": "newCards",
+                        "carte": pesca(mazzo, 3)
+                        }, client)
+        else:
+            err = True
+            inviaJSON({"request": "endGameError"}, clientAvversario)
+            inviaJSON({"request": "closeWindow"}, client)
+            print(f"Il client [{nome}] ha chiuso la finestra")
 
-    inviaJSON({"request": "calculatePoints"}, client)
-
-    score = riceviJSON(client)
+    if not err:
+        inviaJSON({"request": "calculatePoints"}, client)
+        score = riceviJSON(client)
 
 avviaServer()
