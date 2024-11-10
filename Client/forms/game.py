@@ -73,8 +73,9 @@ class Game:
         #self.BuildTable(obj['table'])
         #client.clickCard(obj)
         client.waitMoveThread.start()
-        
-        client.mainGame()
+
+        client.deck = obj['cards']
+        client.table = obj['table']
             
     def Error(self, msg):
         self.animation.stop = True

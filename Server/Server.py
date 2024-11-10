@@ -167,10 +167,14 @@ def mosse(client, clientAvversario, nMosse, mazzo, score, nome):
 
         if mossa["request"] != "closingClient":
             # Invia la mossa all'altro giocatore
-            inviaJSON({
-                "request": "enemyMove",
-                "move": mossa["carta"]
-                }, clientAvversario)
+
+            if len(mossa["tableCardsPicked"]) > 0:
+                inviaJSON({
+                    "request": "enemyMove",
+                    "cardPlayed": mossa["cards"], #CARD GIOCATA
+                    "tableCardsPicked" : mossa["tableCardsPicked"], #CARDS O CARD PRESA DAL TAVOLO,
+                    "msg": mossa["msg"] #variabile per far vedere lato client se l'avversario ha fatto scopa/settebello
+                    }, clientAvversario)
 
             with lock:
                 nMosse[0] += 1
@@ -179,7 +183,8 @@ def mosse(client, clientAvversario, nMosse, mazzo, score, nome):
                 if nMosse % 6 == 0:
                     inviaJSON({
                         "request": "newCards",
-                        "carte": pesca(mazzo, 3)
+                        "cards": pesca(mazzo, 3),
+                        "msg": mossa["msg"] #variabile per far vedere lato client se l'avversario ha fatto scopa/settebello
                         }, client)
         else:
             err = True

@@ -1,6 +1,7 @@
 import socket
 import threading
 import json
+from forms.game import *
 
 # DA OGGETTO A STRINGA
 def stringifyObject(obj):
@@ -62,15 +63,111 @@ def connect(nickname, resolver, error):
 
 lock = threading.Lock()
 
+def calculateAndSendPoints():
+    #controllo numero carte
+    if len(pickedCard) > 20:
+        carte = True
+    elif len(pickedCard) < 20:
+        carte = False
+    else:
+        carte = "pari"
+
+    #controllo dei denari
+    nDenari = 0
+    for c in pickedCard:
+        if c.startswith("D"):
+            d += 1
+
+    if nDenari > 5:
+        denari = True
+    elif nDenari < 5:
+        denari = False
+    else:
+        denari = "pari"
+
+    #FAI CONTROLLO VITTORIA
+    #FAI CONTROLLO VITTORIA
+    #FAI CONTROLLO VITTORIA
+    #FAI CONTROLLO VITTORIA
+
+    inviaJSON({
+        "primiera": True,
+        "carte": carte,
+        "denari": denari,
+        "nScope": nScope,
+        "setteBello": setteBello,
+        "win": win
+    })
+
+
 def waitMove():
-    global enemyMove
+    global data
     stop = False
 
     while not stop:
         with lock:
-            enemyMove = riceviJson()
+            data = riceviJson()
+            turn = True
 
-            match enemyMove["request"]:
+            match data["request"]:
+                case "enemyMove":
+                    turn = True
+                    
+                    if data["msg"] != None:
+                        pass
+                        #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
+                        #ANIMAZIONE QUI??
+                        #ANIMAZIONE QUI??
+                
+
+                    if len(data["tableCardsPicked"]) == 0:
+                        #non si è presa NESSUNA carta dal tavolo => aggiungo la carta al tavolo
+                        table.append(data["cardPlayed"])
+                        #ANIMAZIONE QUI??
+                        #ANIMAZIONE QUI??
+                        #ANIMAZIONE QUI??
+                    else:
+                        #si sono prese 1 o più carte dal tavolo => le tolgo dal tavolo
+                        for c in data["tableCardsPicked"]:
+                            table.remove(c)
+                            #ANIMAZIONE QUI??
+                            #ANIMAZIONE QUI??
+                            #ANIMAZIONE QUI??
+                            #ANIMAZIONE QUI??
+
+
+                    """ showPickCards(cardGiocata, cardDaPrendereDalTavolo)
+                    cardGiocata è data["cardPlayed"]
+                    cardDaPrendereDalTavolo è data["tableCardsPicked"] """
+                    break
+
+                case "newCards":
+                    if data["msg"] != None:
+                        pass
+                        #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
+                        #ANIMAZIONE QUI??
+                        #ANIMAZIONE QUI??
+
+                    cards = data["cards"]
+                    Game.BuildDrawCard(cards)
+                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                    break
+                case "calculatePoints":
+                    stop = True
+                    
+                    calculateAndSendPoints()
+                    
+                    #showPoints()
+                    #showPoints()
+                    #showPoints()
+                    #showPoints()
+                    #showPoints()
+                    break
                 case "endGameError":
                     stop = True
                     #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
@@ -81,40 +178,100 @@ def waitMove():
                     stop = True
                     client.close()
                     break
-                case "calculatePoints":
-                    stop = True
-                        #showPoints()
-                        #showPoints()
-                        #showPoints()
-                        #showPoints()
-                        #showPoints()
-                        #showPoints()
-                    break
-                case "ALTRI CASI DOVE IL GIOCO FUNZIONA":
-                    turn = True
-                    mainGame()
-                    break
 
 turn = False
 waitMoveThread = threading.Thread(target=waitMove)
-enemyMove = {}
+data = {}
 
-def mainGame():
-    #carte.cliccabili = turn so che fa schifo ma è per fare la struttura
-    if turn:
-        pass
-        #faccio mossa
+#variabili per la gestione della mossa
+deck = []
+table = []
+selectedCards = []
+cardToPlay = ""
 
+#variabili per i punteggi
+pickedCard = []
+nScope = 0
+setteBello = False
+
+def getNumber(card):
+    return int(card[-1])
 
 def clickCard(card):
     print(card.value)
     card.move((90, 300))
 
     if turn:
-        """ if possofaremossa:
-            turn = False
-            mossa = {"C1","C2","C3"}#metti poi le carte che si seleziona
-            inviaJSON({mossa}) """
+        if card in deck:
+            #ho schiacciato una carta del mio mazzo => cancello le eventuali carte
+            #selezionate prima e setto la carta selezionata dal deck
+            cardToPlay = card
+            selectedCards = []
+        else:
+            deckCardNumber = getNumber(cardToPlay)
+            selectedCards.append(card)
+            somma = 0
+
+            for c in selectedCards:
+                somma += getNumber(c)
+
+            if somma == deckCardNumber:
+                #EFFETTUO LA MOSSA
+
+                if utenteConfermaMossa:
+                    #L'UTENTE HA CONFERMATO LA MOSSA E LA GIOCA
+                    pickedCard += selectedCards
+                    msg = None
+                    
+                    for c in selectedCards:
+                        table.remove(c)
+                        #ANIMAZIONE QUI????
+                        #ANIMAZIONE QUI????
+                        #ANIMAZIONE QUI????
+                        #ANIMAZIONE QUI????
+                        #ANIMAZIONE QUI????
+
+                    deck.remove(cardToPlay)
+                    #ANIMAZIONE QUI????
+                    #ANIMAZIONE QUI????
+                    #ANIMAZIONE QUI????
+                    #ANIMAZIONE QUI????
+                    #ANIMAZIONE QUI????
+
+
+                    if "D7" in selectedCards:
+                        msg = Game.user + " ha preso il sette bello!!!"
+                        setteBello = True
+                    elif len(table) == 0:
+                        msg = Game.user + " ha fatto scopa!!!"
+                        nScope += 1
+
+                    inviaJSON({
+                        "request": "enemyMove",
+                        "cardPlayed": cardToPlay,
+                        "tableCardsPicked": selectedCards,
+                        "msg": msg
+                    })
+
+                    selectedCards = []
+                    cardToPlay = ""
+                    turn = False
+                else:
+                    #L'UTENTE HA !NON! HA CONFERMATO LA MOSSA E RESETTO TUTTO
+                    selectedCards = []
+                    cardToPlay = ""
+
+            elif somma < deckCardNumber:
+                #FORSE FORSE potrei fare ancora una mossa (NON ASSICURATO)
+                #NON POSSO TERMINARE LA MOSSA E NON POSSO INVIARE LA MOSSA
+                pass
+            else:
+                #LE CARTE SELEZIONATE SONO OLTRE IL NUMERO DELLA CARTA DA GIOCARE
+                #DESELEZIONO LE CARTE DEL TAVOLO
+                
+                selectedCards = []
+                alert("Il numero delle carte selezionate supera quello della carta da giocare")
+
         #TUTTO IL CODICE STA DENTRO SE E' IL MIO TURNO
         #FAI FUNZIONE CHE CERCA E TROVA TUTTE LE COMBINAZIONI DELLE MOSSE POSSIBILI CON LA CARTA CHE SELEZIONI DAL TUO MAZZP
         #FAI FUNZIONE CHE CERCA E TROVA TUTTE LE COMBINAZIONI DELLE MOSSE POSSIBILI CON LA CARTA CHE SELEZIONI DAL TUO MAZZP
