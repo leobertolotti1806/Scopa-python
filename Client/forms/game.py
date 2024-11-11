@@ -6,8 +6,8 @@ from card import *
 
 class Game:
 
-    cards_hand = []
-    cards_table = []
+    cards_hand = None
+    cards_table = None
 
     def __init__(self, root : customtkinter.CTk, user):
         self.cards_hand = []
@@ -30,13 +30,13 @@ class Game:
         self.lbl.place(x=centerX(), y=centerY(), anchor="center")
         
         self.msgBox = MessageBox(root=self.frame)
-        client.waitForGame(self.user, self.InitGame, self.Error)
+        #client.waitForGame(self.user, self.InitGame, self.Error)
         self.animation = animation.AnimationText(self.root, self.msgBox.lbl, 300, [
             "In attesa di un giocatore.  ",
             "In attesa di un giocatore.. ",
             "In attesa di un giocatore..."
         ])
-        """ self.InitGame(
+        self.InitGame(
             {
                 "request": "startGame",
                 "user2" : "ciasky",
@@ -45,8 +45,7 @@ class Game:
                 "cards": ["C1", "B2", "D4"]
             }
         )
- """
-        root.master.protocol("WM_DELETE_WINDOW", lambda: client.chiusura(root.master))
+        #root.master.protocol("WM_DELETE_WINDOW", lambda: client.chiusura(root.master))
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
     def InitGame(self, obj):
@@ -67,9 +66,9 @@ class Game:
 
         #set turno
         client.turn = obj['startingTurn']
-        self.setStatus()
 
         self.BuildDrawCard(obj['cards'])
+        self.setStatus()
         #self.BuildTable(obj['table'])
         #client.clickCard(obj)
         client.waitMoveThread.start()
@@ -82,19 +81,12 @@ class Game:
         self.msgBox.error(msg)
 
     def BuildDrawCard(self, card):
-        for i in range(len(card)):
-            img = customtkinter.CTkImage(Image.open(f"media/cards/{card[i]}.png"), size=CARDS_HAND_SIZE)
-            w_card = Card(
-                master=self.frame,
-                text="",
-                image = img,
-                anchor = "center",
-                value=card[i],
-                root=self.root
-            )
-            self.cards_hand.append(
-                w_card
-            )
+        self.cards_hand = HandSpace(
+            self.frame,
+            card,
+            CARDS_HAND_SIZE,
+            CARDS_HAND_Y
+        )
 
     def setStatus(self):
         if(self.animation.thread.is_alive()):

@@ -198,6 +198,7 @@ def getNumber(card):
     return int(card[-1])
 
 def clickCard(card):
+    # SE GIOCO UN 8 
     print(card.value)
     card.move((90, 300))
 

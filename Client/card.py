@@ -9,13 +9,11 @@ class Card(CTkLabel):
 
     def __init__(
             self,
-            root,
             value,
-            pos = (R_WIDTH + 10, centerY()),
+            pos,
             **args
         ):
         super().__init__(**args)
-        self.root = root
         self.pos = pos
         self.value = value
         self.eventAnimation = threading.Event()
@@ -33,21 +31,70 @@ class Card(CTkLabel):
         self.waitAnimation()
 
     def animation(self, x, y, rect : Rect):
+        index = 0
         if(not rect.error):
-            if(self.pos[0] < x):
-                x -= 2
-            else:
-                x += 2
-            y = rect.getY(x)
-            self.place(x=x, y=y, anchor="center")
-            if(x != self.pos[0]):
-                self.root.after(5, self.animation, x, y, rect)
-                #self.animation(x, y, rect)
+            while x != self.pos[0]:
+                print(x)
+                index += 1
+                if(self.pos[0] < x):
+                    x -= 0.1
+                    x = round(x, 1)
+                else:
+                    x += 0.1
+                    x = round(x, 1)
+
+                y = rect.getY(x)
+                self.place(x=x, y=y, anchor="center")
+                time.sleep(0.001)
 
     def move(self, p2):
         self.pos = p2
         if(not self.eventAnimation.is_set()):
             self.eventAnimation.set()
+
+class HandSpace:
+
+    def __init__(
+        self,
+        master,
+        cards,
+        size,
+        y
+    ):
+        self.cards = []
+        self.size = size
+        self.y = y
+        for i in range(len(cards)):
+            img = customtkinter.CTkImage(Image.open(f"media/cards/{cards[i]}.png"), size=self.size)
+            self.cards.append(
+                Card(
+                    master=master,
+                    text="",
+                    image = img,
+                    anchor = "center",
+                    pos = (R_WIDTH + self.size[0], self.y),
+                    value=cards[i],
+                )
+            )
+        self.calculate()
+    
+    def calculate(self):
+        spaceSize = (len(self.cards) * self.size[0]) + (len(self.cards) * 10)
+        #            spazio occuppato dalle carte    spazio margini
+        xstart = centerX() - (spaceSize / 2)
+
+        for i in range(len(self.cards)):
+            self.cards[i].move(
+                (
+                    xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i),
+                    self.y
+                )
+            )
+            
+            
+
+
+        
 
 
     

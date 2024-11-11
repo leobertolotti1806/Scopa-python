@@ -1,5 +1,5 @@
 import customtkinter
-from PIL import Image
+from PIL import Image, ImageTk
 
 #palette
 BACK_COLOR = "#70b87b"
@@ -35,21 +35,8 @@ def centerX():
 def centerY():
     return R_HEIGHT / 2
 
-#positions
-POS_CARDS_HAND = [
-    (
-        centerX() - CARDS_HAND_SIZE[0] - 10,
-        R_HEIGHT - (CARDS_HAND_SIZE[1] / 2) - 10
-    ),
-    (
-        centerX(),
-        R_HEIGHT - (CARDS_HAND_SIZE[1] / 2) - 10
-    ),
-    (
-        centerX() + CARDS_HAND_SIZE[0] + 10,
-        R_HEIGHT - (CARDS_HAND_SIZE[1] / 2) - 10
-    )
-]
+#y carte mano 1
+CARDS_HAND_Y = R_HEIGHT - (CARDS_HAND_SIZE[1] / 2) - 10
 
 class MessageBox:
 
