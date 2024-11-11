@@ -17,6 +17,7 @@ class Card(CTkLabel):
         self.pos = pos
         self.value = value
         self.eventAnimation = threading.Event()
+        self.waitBeforeAnimation = 0
         self.bind("<Button-1>", lambda event, e=self: client.clickCard(e))
         self.place(x=self.pos[0], y=self.pos[1], anchor="center")
         self.render = threading.Thread(target=self.waitAnimation)
@@ -26,6 +27,8 @@ class Card(CTkLabel):
         x = self.pos[0]
         y = self.pos[1]
         self.eventAnimation.wait()
+        if(self.waitBeforeAnimation):
+            time.sleep(self.waitBeforeAnimation)
         self.animation(x, y, Rect((x, y), self.pos))
         self.eventAnimation.clear()
         self.waitAnimation()
@@ -34,22 +37,23 @@ class Card(CTkLabel):
         index = 0
         if(not rect.error):
             while x != self.pos[0]:
-                print(x)
+                #print(x)
                 index += 1
                 if(self.pos[0] < x):
-                    x -= 0.1
+                    x -= 0.25
                     x = round(x, 1)
                 else:
-                    x += 0.1
+                    x += 0.25
                     x = round(x, 1)
 
                 y = rect.getY(x)
                 self.place(x=x, y=y, anchor="center")
-                time.sleep(0.001)
+                time.sleep(0.000001)
 
-    def move(self, p2):
+    def move(self, p2, timeW = 0):
         self.pos = p2
         if(not self.eventAnimation.is_set()):
+            self.waitBeforeAnimation = timeW
             self.eventAnimation.set()
 
 class HandSpace:
@@ -88,8 +92,10 @@ class HandSpace:
                 (
                     xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i),
                     self.y
-                )
+                ),
+                timeW=(0.5 * i)
             )
+            
             
             
 
