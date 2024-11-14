@@ -11,14 +11,19 @@ class Card(CTkLabel):
             self,
             value,
             pos,
+            cardImg,
+            size,
             root : customtkinter.CTk,
             onclick = None,
             **args
         ):
-        super().__init__(**args)
+        image = customtkinter.CTkImage(cardImg, size=size)
+        super().__init__(**args, image=image)
         self.root = root
         self.pos = pos
         self.value = value
+        self.img = cardImg
+        self.size = size
         self.eventAnimation = threading.Event()
         self.waitBeforeAnimation = 0
         if(onclick != None):
@@ -30,10 +35,15 @@ class Card(CTkLabel):
     def waitAnimation(self):
         x = self.pos[0]
         y = self.pos[1]
+        sizeX = self.size[0]
+        sizeY = self.size[1]
         self.eventAnimation.wait()
         if(self.waitBeforeAnimation):
             time.sleep(self.waitBeforeAnimation)
             self.waitBeforeAnimation = 0
+        if(sizeX != self.size):
+            image = customtkinter.CTkImage(self.img, size=self.size)
+            self.configure(image=image)
         self.animation(x, y, Rect((x, y), self.pos))
         self.eventAnimation.clear()
         self.waitAnimation()
@@ -58,8 +68,10 @@ class Card(CTkLabel):
                     time.sleep(0.0000001)
                     index = 0
 
-    def move(self, p2, timeW = 0):
+    def move(self, p2, timeW = 0, size = "NaN"):
         self.pos = p2
+        if(size != "NaN"):
+            self.size = size
         if(not self.eventAnimation.is_set()):
             self.waitBeforeAnimation = timeW
             self.eventAnimation.set()
@@ -85,13 +97,13 @@ class HandSpace:
             self.x = - self.size[0]
         self.y = yStart
         for i in range(len(cards)):
-            img = customtkinter.CTkImage(Image.open(f"media/cards/{cards[i]}.png"), size=self.size)
             self.cards.append(
                 Card(
                     root= self.root,
                     master=master,
                     text="",
-                    image = img,
+                    cardImg = Image.open(f"media/cards/{cards[i]}.png"),
+                    size = self.size,
                     anchor = "center",
                     pos = (self.x, self.y),
                     value=cards[i],
@@ -134,33 +146,37 @@ class TableSpace:
             self.x = - self.size[0]
         self.y = yStart
         for i in range(len(cards)):
-            img = customtkinter.CTkImage(Image.open(f"media/cards/{cards[i]}.png"), size=self.size)
             self.cards.append(
                 Card(
                     root= self.root,
                     master=master,
                     text="",
-                    image = img,
+                    cardImg= Image.open(f"media/cards/{cards[i]}.png"),
+                    size = self.size,
                     anchor = "center",
                     pos = (self.x, self.y),
                     value=cards[i],
                 )
             )
-        self.calculate()
+        self.calculate(True)
     
-    def calculate(self):
+    def calculate(self, delay = 0):
         spaceSize = (len(self.cards) * self.size[0]) + (len(self.cards) * 10)
         #            spazio occuppato dalle carte    spazio margini
         x = 0
         xstart = centerX() - (spaceSize / 2)
+        time = 0
 
         for i in range(len(self.cards)):
             x = xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i)
+            if(delay != 0):
+                time = (1 * i)
             self.cards[i].move(
                 (
                     x,
                     self.y
-                )
+                ),
+                time
             )
         return x # ultima posizione dove inserire la carta
     
@@ -171,7 +187,8 @@ class TableSpace:
             (
                 x,
                 self.y
-            )
+            ),
+            size= CARDS_TABLE_SIZE
         )
 
 

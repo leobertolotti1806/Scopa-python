@@ -1,5 +1,6 @@
 import customtkinter
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
+import io
 
 #palette
 BACK_COLOR = "#70b87b"
