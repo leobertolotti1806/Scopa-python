@@ -6,12 +6,11 @@ from card import *
 
 class Game:
 
-    cards_hand = None
-    cards_table = None
+    space1 = None
+    space2 = None
+    table = None
 
     def __init__(self, root : customtkinter.CTk, user):
-        self.cards_hand = []
-        self.cards_table = []
         self.user = user
         self.root = root
         self.frame = customtkinter.CTkFrame(master=root,  fg_color=BACK_COLOR)
@@ -27,7 +26,7 @@ class Game:
             text=""
         )
 
-        self.lbl.place(x=centerX(), y=centerY(), anchor="center")
+        self.lbl.place(x=centerX(), y=LOGO_Y, anchor="center")
         
         self.msgBox = MessageBox(root=self.frame)
         #client.waitForGame(self.user, self.InitGame, self.Error)
@@ -41,7 +40,7 @@ class Game:
                 "request": "startGame",
                 "user2" : "ciasky",
                 "startingTurn": True,
-                "table": [],
+                "table": ["D2", "C3", "D7", "S1"],
                 "cards": ["C1", "B2", "D4"]
             }
         )
@@ -69,7 +68,7 @@ class Game:
 
         self.BuildDrawCard(obj['cards'])
         self.setStatus()
-        #self.BuildTable(obj['table'])
+        self.BuildTable(obj['table'])
         #client.clickCard(obj)
         client.waitMoveThread.start()
 
@@ -81,12 +80,38 @@ class Game:
         self.msgBox.error(msg)
 
     def BuildDrawCard(self, card):
-        self.cards_hand = HandSpace(
+        self.space1 = HandSpace(
+            self.root,
             self.frame,
             card,
             CARDS_HAND_SIZE,
-            CARDS_HAND_Y
+            pos= "end",
+            yStart= CARDS_HAND_Y,
+            onclick=self.clickCard
         )
+
+        self.space2 = HandSpace(
+            self.root,
+            self.frame,
+            ["back", "back", "back"],
+            CARDS_HAND_OPPONENT_SIZE,
+            pos= "start",
+            yStart = CARDS_HAND_OPPONENT_Y,
+            onclick=self.clickCard
+        )
+
+    def BuildTable(self, card):
+        self.table = TableSpace(
+            self.root,
+            self.frame,
+            card,
+            CARDS_TABLE_SIZE,
+            pos="start",
+            yStart=CARDS_TABLE_Y
+        )
+
+    def clickCard(self, card):
+        self.table.addCard(card)
 
     def setStatus(self):
         if(self.animation.thread.is_alive()):

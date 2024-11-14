@@ -12,7 +12,9 @@ RED = "#ff7d7d"
 #sizes
 R_WIDTH = 950
 R_HEIGHT = 650
-CARDS_HAND_SIZE = (125, 220)
+CARDS_HAND_SIZE = (110, 195)
+CARDS_HAND_OPPONENT_SIZE = (55, 97.5)
+CARDS_TABLE_SIZE = CARDS_HAND_OPPONENT_SIZE
 
 def default_font():
     return customtkinter.CTkFont(family="Microsoft YaHei", size=12, weight="normal")
@@ -37,6 +39,9 @@ def centerY():
 
 #y carte mano 1
 CARDS_HAND_Y = R_HEIGHT - (CARDS_HAND_SIZE[1] / 2) - 10
+CARDS_HAND_OPPONENT_Y = (CARDS_HAND_OPPONENT_SIZE[1] / 2) + 10
+LOGO_Y = centerY() - ((CARDS_HAND_SIZE[1] - CARDS_HAND_OPPONENT_SIZE[1]) / 2)
+CARDS_TABLE_Y = LOGO_Y
 
 class MessageBox:
 

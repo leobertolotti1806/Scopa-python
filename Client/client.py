@@ -200,7 +200,7 @@ def getNumber(card):
 def clickCard(card):
     # SE GIOCO UN 8 
     print(card.value)
-    card.move((90, 300))
+    card
 
     if turn:
         if card in deck:
