@@ -191,6 +191,23 @@ class TableSpace:
             size= CARDS_TABLE_SIZE
         )
 
+    def removeCards(self, cards):
+        for card in cards:
+            self.cards.remove(card)
+            card.move(
+                (
+                    R_WIDTH + self.size[0],
+                    self.y
+                )
+            )
+        self.calculate()
+
+    def waitAnimations(cards):
+        while True:
+            #....
+            break
+
+        
 
             
             

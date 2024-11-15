@@ -110,8 +110,63 @@ class Game:
             yStart=CARDS_TABLE_Y
         )
 
-    def clickCard(self, card):
-        self.table.addCard(card)
+    def clickCard(self, card : Card):
+        pickCards = []
+        # esempio
+        pickCards = [
+            [
+                self.table.cards[0],
+                self.table.cards[1]
+            ]
+        ]
+        #pickCards = client.getMoves(card, self.table) tipo per sapere la mossa da fare
+        """
+            se si può fare una mossa sola avrò in pickCards tipo
+            [
+                [card1, card2] in questa mossa io prendo queste 2 carte
+            ]
+
+            se ci sono più mosse possibili io avrò pickCards come
+            [
+                [card1, card2],
+                [card1, card3, card3]
+            ]
+
+            qui quindi dovrò chiedere all'utente di scegliere quale tra le mosse possibili vuole Fare
+            dopo aver scelto la mossa semplicemente chiamo la funzione che esegue la mossa (graficamente)
+
+            le card sono oggetti!!
+        """
+        if(len(pickCards) == 0):
+            self.table.addCard(card)
+        elif (len(pickCards) == 1):
+            self.execMove(card, pickCards[0])
+        else:
+            #self.chooseMove(card, pickCards)
+            pass
+
+            
+
+    def execMove(self, card, move):
+        card.move(
+            (
+                move[0].pos[0],
+                move[0].pos[1]
+            ),
+            size= CARDS_TABLE_SIZE
+        )
+        for i in move[1:]:
+            i.move(
+                (
+                    move[0].pos[0],
+                    move[0].pos[1]
+                )
+            )
+        
+        #self.table.waitAnimations(move)
+        #self.table.removeCards(move + [card]) #merge del vettore delle carta più la carta stessa
+        #client.sendMove(card, move)
+                
 
     def setStatus(self):
         if(self.animation.thread.is_alive()):
