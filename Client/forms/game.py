@@ -29,12 +29,13 @@ class Game:
         self.lbl.place(x=centerX(), y=LOGO_Y, anchor="center")
         
         self.msgBox = MessageBox(root=self.frame)
-        #client.waitForGame(self.user, self.InitGame, self.Error)
+        client.waitForGame(self.user, self.InitGame, self.Error)
         self.animation = animation.AnimationText(self.root, self.msgBox.lbl, 300, [
             "In attesa di un giocatore.  ",
             "In attesa di un giocatore.. ",
             "In attesa di un giocatore..."
         ])
+        """ 
         self.InitGame(
             {
                 "request": "startGame",
@@ -43,8 +44,8 @@ class Game:
                 "table": ["D2", "C3", "D7", "S1"],
                 "cards": ["C1", "B2", "D4"]
             }
-        )
-        #root.master.protocol("WM_DELETE_WINDOW", lambda: client.chiusura(root.master))
+        ) """
+        root.master.protocol("WM_DELETE_WINDOW", lambda: client.chiusura(root.master))
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
     def InitGame(self, obj):
@@ -64,16 +65,14 @@ class Game:
         self.lblstatus2.place(x = R_WIDTH - 30, y = 60, anchor="ne")
 
         #set turno
-        #client.turn = obj['startingTurn']
+        client.turn = obj['startingTurn']
 
         self.BuildTable(obj['table'])
         self.BuildDrawCard(obj['cards'])
         self.setStatus()
-        #client.clickCard(obj)
-        #client.waitMoveThread.start()
+        client.waitMoveThread.start()
 
-        #client.deck = obj['cards']
-        #client.table = obj['table']
+        client.deck = obj['cards']
             
     def Error(self, msg):
         self.animation.stop = True
@@ -111,39 +110,36 @@ class Game:
         )
 
     def clickCard(self, card : Card):
-        moves = []
-        # esempio
-        moves = [
-            [
-                self.table.cards[0],
-                self.table.cards[1]
-            ]
-        ]
-        #pickCards = client.getMoves(card, self.table) tipo per sapere la mossa da fare
-        """
-            se si può fare una mossa sola avrò in pickCards tipo
-            [
-                [card1, card2] in questa mossa io prendo queste 2 carte
-            ]
+        #INGLOVA FUNZIONAMENTO MOSSE / GIOCO DA CLIENT.CLICKCARD
+        if client.turn:
+            if card.value not in self.table:
+                #SE E' UNA CARTA DEL TAVOLO NON DEVO ESEGUIRE IL CALCOLO DELLE COMBINAZIONI
+                possibleMoves = client.getMoves(card, self.table) #tipo per sapere la mossa da fare
+                possibleMoves
+                """
+                    se si può fare una mossa sola avrò in pickCards tipo
+                    [
+                        [card1, card2] in questa mossa io prendo queste 2 carte
+                    ]
 
-            se ci sono più mosse possibili io avrò pickCards come
-            [
-                [card1, card2],
-                [card1, card3, card3]
-            ]
+                    se ci sono più mosse possibili io avrò pickCards come
+                    [
+                        [card1, card2],
+                        [card1, card3, card3]
+                    ]
 
-            qui quindi dovrò chiedere all'utente di scegliere quale tra le mosse possibili vuole Fare
-            dopo aver scelto la mossa semplicemente chiamo la funzione che esegue la mossa (graficamente)
+                    qui quindi dovrò chiedere all'utente di scegliere quale tra le mosse possibili vuole Fare
+                    dopo aver scelto la mossa semplicemente chiamo la funzione che esegue la mossa (graficamente)
 
-            le card sono oggetti!!
-        """
-        if(len(moves) == 0):
-            self.table.addCard(card)
-        elif (len(moves) == 1):
-            self.execMove(card, moves[0])
-        else:
-            #self.chooseMove(card, moves)
-            pass
+                    le card sono oggetti!!
+                """
+                """ if(len(possibleMoves) == 0):
+                    self.table.addCard(card)
+                elif (possoPrendere1opiuCarteDelloStessoNumeroDellaCartaCheSiVuoleGiocare):
+                    self.execMove(card, possibleMoves[0])
+                else:
+                    #self.chooseMove(card, pickCards)
+                    pass """
 
             
 
