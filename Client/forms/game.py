@@ -1,6 +1,6 @@
 from config import *
 # modulo con le funzioni per il funzionamento del gioco
-import client
+#import client
 import animation
 from card import *
 
@@ -64,16 +64,16 @@ class Game:
         self.lblstatus2.place(x = R_WIDTH - 30, y = 60, anchor="ne")
 
         #set turno
-        client.turn = obj['startingTurn']
+        #client.turn = obj['startingTurn']
 
+        self.BuildTable(obj['table'])
         self.BuildDrawCard(obj['cards'])
         self.setStatus()
-        self.BuildTable(obj['table'])
         #client.clickCard(obj)
-        client.waitMoveThread.start()
+        #client.waitMoveThread.start()
 
-        client.deck = obj['cards']
-        client.table = obj['table']
+        #client.deck = obj['cards']
+        #client.table = obj['table']
             
     def Error(self, msg):
         self.animation.stop = True
@@ -111,9 +111,9 @@ class Game:
         )
 
     def clickCard(self, card : Card):
-        pickCards = []
+        moves = []
         # esempio
-        pickCards = [
+        moves = [
             [
                 self.table.cards[0],
                 self.table.cards[1]
@@ -137,41 +137,48 @@ class Game:
 
             le card sono oggetti!!
         """
-        if(len(pickCards) == 0):
+        if(len(moves) == 0):
             self.table.addCard(card)
-        elif (len(pickCards) == 1):
-            self.execMove(card, pickCards[0])
+        elif (len(moves) == 1):
+            self.execMove(card, moves[0])
         else:
-            #self.chooseMove(card, pickCards)
+            #self.chooseMove(card, moves)
             pass
 
             
 
-    def execMove(self, card, move):
-        card.move(
-            (
-                move[0].pos[0],
-                move[0].pos[1]
-            ),
-            size= CARDS_TABLE_SIZE
-        )
-        for i in move[1:]:
+    def execMove(self, card, pickCard):
+        #self.space1.calculate()
+        self.space1.cards.remove(card)
+        self.space1.calculate()
+
+        pickCard.append(card)
+        self.table.cards.append(card)
+        self.table.rmCards = pickCard
+        """self.table.cards.append(card)
+        pickCard.append(card)
+        self.table.removeCards(pickCard)"""
+        threading.Thread(target=self.renderMove).start()
+        #merge del vettore delle carta più la carta stessa
+        #client.sendMove(card, move)
+
+    def renderMove(self):
+        for i in self.table.rmCards:
             i.move(
                 (
-                    move[0].pos[0],
-                    move[0].pos[1]
-                )
+                    self.table.rmCards[0].pos[0],
+                    self.table.rmCards[0].pos[1]
+                ),
+                size=CARDS_TABLE_SIZE
             )
-        
-        #self.table.waitAnimations(move)
-        #self.table.removeCards(move + [card]) #merge del vettore delle carta più la carta stessa
-        #client.sendMove(card, move)
-                
+            #self.table.waitForRemove(card, pickCard)
+        self.table.waitAnimations()
+        self.table.removeCards() 
 
     def setStatus(self):
         if(self.animation.thread.is_alive()):
             self.animation.waitStop()
-        if(client.turn):
+        if(True): #client.turn
             self.lblstatus2.configure(text="")
             self.animation = animation.AnimationText(self.root, self.lblstatus1, 300, [
                 "Fai la tua mossa.  ",

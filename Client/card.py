@@ -1,9 +1,12 @@
 from customtkinter import CTkLabel
 from config import *
-import client
+#import client
 import threading
 from animation import Rect
 import time
+
+semaphore = threading.Semaphore()
+stop = []
 
 class Card(CTkLabel):
 
@@ -38,7 +41,10 @@ class Card(CTkLabel):
         sizeX = self.size[0]
         sizeY = self.size[1]
         self.eventAnimation.wait()
-        if(self.waitBeforeAnimation):
+        semaphore.acquire()
+        stop.append(True)
+        semaphore.release()
+        if(self.waitBeforeAnimation != 0):
             time.sleep(self.waitBeforeAnimation)
             self.waitBeforeAnimation = 0
         if(sizeX != self.size):
@@ -46,6 +52,9 @@ class Card(CTkLabel):
             self.configure(image=image)
         self.animation(x, y, Rect((x, y), self.pos))
         self.eventAnimation.clear()
+        semaphore.acquire()
+        stop.remove(True)
+        semaphore.release()
         self.waitAnimation()
 
     def animation(self, x, y, rect : Rect):
@@ -65,7 +74,7 @@ class Card(CTkLabel):
                 self.place(x=x, y=y, anchor="center")
                 #self.update()
                 if(index == 2):
-                    time.sleep(0.0000001)
+                    time.sleep(0.000001)
                     index = 0
 
     def move(self, p2, timeW = 0, size = "NaN"):
@@ -75,6 +84,7 @@ class Card(CTkLabel):
         if(not self.eventAnimation.is_set()):
             self.waitBeforeAnimation = timeW
             self.eventAnimation.set()
+        else: print("la condizione è",  self.eventAnimation.is_set())
 
 class HandSpace:
 
@@ -137,6 +147,8 @@ class TableSpace:
         pos,
         yStart
     ):
+        self.rmCards = []
+        self.finshAnimation = 0
         self.root = root
         self.cards = []
         self.size = size
@@ -176,7 +188,7 @@ class TableSpace:
                     x,
                     self.y
                 ),
-                time
+                timeW=time
             )
         return x # ultima posizione dove inserire la carta
     
@@ -191,22 +203,26 @@ class TableSpace:
             size= CARDS_TABLE_SIZE
         )
 
-    def removeCards(self, cards):
-        for card in cards:
-            self.cards.remove(card)
-            card.move(
-                (
-                    R_WIDTH + self.size[0],
-                    self.y
+    def removeCards(self):
+        for card in self.rmCards:
+            rm = self.indexRm(card)
+            if(rm):
+                rm.move(
+                    (
+                        R_WIDTH + self.size[0],
+                        self.y
+                    )
                 )
-            )
         self.calculate()
 
-    def waitAnimations(cards):
-        while True:
-            #....
-            break
-
+    def indexRm(self, card):
+        for i in range(len(self.cards)):
+            if(self.cards[i].value == card.value):
+                return self.cards.pop(i)
+            
+    def waitAnimations(self):
+        while len(stop) != 0:
+            time.sleep(0.0001)
         
 
             

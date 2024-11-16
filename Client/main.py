@@ -1,3 +1,4 @@
+
 # config contiene customtkinter
 from config import *
 
