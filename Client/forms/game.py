@@ -1,6 +1,6 @@
 from config import *
 # modulo con le funzioni per il funzionamento del gioco
-#import client
+import client
 import animation
 from card import *
 
@@ -66,7 +66,6 @@ class Game:
 
         #set turno
         client.turn = obj['startingTurn']
-
         self.BuildTable(obj['table'])
         self.BuildDrawCard(obj['cards'])
         self.setStatus()
@@ -112,10 +111,11 @@ class Game:
     def clickCard(self, card : Card):
         #INGLOVA FUNZIONAMENTO MOSSE / GIOCO DA CLIENT.CLICKCARD
         if client.turn:
-            if card.value not in self.table:
+            #array table solo con i .value delle card
+            if card.value not in [c.value for c in self.table.cards]:
                 #SE E' UNA CARTA DEL TAVOLO NON DEVO ESEGUIRE IL CALCOLO DELLE COMBINAZIONI
-                possibleMoves = client.getMoves(card, self.table) #tipo per sapere la mossa da fare
-                possibleMoves
+                possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
+                print(f"{possibleMoves}")
                 """
                     se si può fare una mossa sola avrò in pickCards tipo
                     [
@@ -174,7 +174,7 @@ class Game:
     def setStatus(self):
         if(self.animation.thread.is_alive()):
             self.animation.waitStop()
-        if(True): #client.turn
+        if(client.turn):
             self.lblstatus2.configure(text="")
             self.animation = animation.AnimationText(self.root, self.lblstatus1, 300, [
                 "Fai la tua mossa.  ",

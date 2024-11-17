@@ -54,14 +54,37 @@ def inviaJSON(messaggio, client):
         # Invia al SINGOLO client
         client.send(messaggio)
 
+def checkClosureClient(client):
+    obj = {}
+    endThread = False
+
+    while not endThread:
+        obj = riceviJSON(client["client"])
+
+        if obj["request"] == "closingClient" or obj["request"] == "stopWaiting" or obj["request"] == "move":
+            endThread = True
+
+    if obj["request"] == "stopWaiting":
+        print(f"chiudo il client [{client["nome"]}] e rimuovo la connessione al server")
+        with lock:
+            clients.remove(client)
+            client["client"].close()
+
+
 def matchClient(client, addr):
     nome = riceviJSON(client)['nome']
     print("Si è connesso " + nome)
 
-    with lock:
-        clients.append({"client": client, "addr": addr, "nome": nome})
+    clientObj = {"client": client, "addr": addr, "nome": nome}
+    #THREAD CHE CONTROLLA LA CHIUSURA DEI CLIENT E CORREGGE IL FUNZIONAMENTO
 
-    if (len(clients) > 1 and len(clients) % 2 == 0):
+    threading.Thread(target=checkClosureClient, args = (clientObj,)).start()
+
+    with lock:
+        clients.append(clientObj)
+
+    if len(clients) % 2 == 0:
+        if len(clients) > 1:
             #si collegano 2 giocatori
             # Avvio un Nuovo THREAD per la gestione della partita
             
@@ -88,7 +111,6 @@ def avviaServer():
         client, addr = server.accept()
         threading.Thread(target=matchClient, args = (client, addr)).start()
 
-        
         
 # Metodo per Gestire i Messaggi in Arrivo dal CLIENT
 def partita(client1, client2, mazzo):
@@ -118,13 +140,12 @@ def partita(client1, client2, mazzo):
         "user2": client1['nome']
         }, c2)
 
-    t1 = threading.Thread(target=mosse, args=(c1, c2, nMosse, mazzo, score1, client1['nome']))
-    t2 = threading.Thread(target=mosse, args=(c2, c1, nMosse, mazzo, score2, client2['nome']))
+    t1 = threading.Thread(target=mosse, args=(c1, client2, nMosse, mazzo, score1, client1['nome']))
+    t2 = threading.Thread(target=mosse, args=(c2, client1, nMosse, mazzo, score2, client2['nome']))
 
     t1.start()
     t2.start()
 
-    # Attendi che i thread completino
     t1.join()
     t2.join()
 
@@ -142,11 +163,12 @@ def partita(client1, client2, mazzo):
             "msg": vincitore
             }, [c1, c2])
 
-    c1.close()
-    c2.close()
+        c1.close()
+        c2.close()
 
-    clients.remove(client1)
-    clients.remove(client2)
+        clients.remove(client1)
+        clients.remove(client2)
+
     print("FINISCO THREAD PARTITA")
 
 def pesca(mazzo, nCarte):
@@ -157,20 +179,22 @@ def pesca(mazzo, nCarte):
 
     return carteScelte
 
-def mosse(client, clientAvversario, nMosse, mazzo, score, nome):
+def mosse(client, cAvversario, nMosse, mazzo, score, nome):
     err = False
+
+    clientAvversario = cAvversario["client"]
 
     while not err and nMosse[0] < 30:
         # Riceve la mossa dal giocatore attuale
+        print("avvio mossa")
         mossa = riceviJSON(client)
         print(f"Mossa ricevuta: {mossa}")
 
         if mossa["request"] != "closingClient":
             # Invia la mossa all'altro giocatore
-
             if len(mossa["tableCardsPicked"]) > 0:
                 inviaJSON({
-                    "request": "enemyMove",
+                    "request": "move",
                     "cardPlayed": mossa["cards"], #CARD GIOCATA
                     "tableCardsPicked" : mossa["tableCardsPicked"], #CARDS O CARD PRESA DAL TAVOLO,
                     "msg": mossa["msg"] #variabile per far vedere lato client se l'avversario ha fatto scopa/settebello
@@ -179,18 +203,21 @@ def mosse(client, clientAvversario, nMosse, mazzo, score, nome):
             with lock:
                 nMosse[0] += 1
 
-                # Ogni 6 mosse termina il round
-                if nMosse % 6 == 0:
-                    inviaJSON({
-                        "request": "newCards",
-                        "cards": pesca(mazzo, 3),
-                        "msg": mossa["msg"] #variabile per far vedere lato client se l'avversario ha fatto scopa/settebello
-                        }, client)
+            # Ogni 6 mosse termina il round
+            if nMosse % 6 == 0:
+                inviaJSON({
+                    "request": "newCards",
+                    "cards": pesca(mazzo, 3),
+                    "msg": mossa["msg"] #variabile per far vedere lato client se l'avversario ha fatto scopa/settebello
+                    }, client)
         else:
+            print(f"Il client [{nome}] ha chiuso la finestra")
             err = True
             inviaJSON({"request": "endGameError"}, clientAvversario)
-            inviaJSON({"request": "closeWindow"}, client)
-            print(f"Il client [{nome}] ha chiuso la finestra")
+            with lock:
+                clientAvversario.close()
+                clients.remove(cAvversario)
+                
 
     if not err:
         inviaJSON({"request": "calculatePoints"}, client)

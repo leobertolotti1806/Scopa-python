@@ -32,6 +32,11 @@ def chiusura(root):
         #SE HAI PROBLEMI E PER FACILITARTI LA VITA DEVI CAMBIARE QUESTA IF
         #PUOI VERIFICARE SE IL CLIENT E' ANCORA CONNESSO AL SERVER 
         inviaJSON({"request": "closingClient"})
+        print("SONO in una partita e chiudo il client")
+    else:
+        #NON SONO ANCORA IN UNA PARTITA
+        print("non sono in una partita e chiudo il client")
+        inviaJSON({"request": "stopWaiting"})
 
     root.destroy()
 
@@ -41,11 +46,9 @@ def chiusura(root):
 Host = "192.168.178.24"
 Host = socket.gethostbyname(socket.gethostname())
 Porta = 9999
-
 Indirizzo = (Host, Porta)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 
 def waitForGame(nickname, resolver, error):
     threading.Thread(target=connect, args=(nickname, resolver, error)).start()
@@ -110,7 +113,7 @@ def waitMove():
             turn = True
 
             match data["request"]:
-                case "enemyMove":
+                case "move":
                     turn = True
                     
                     if data["msg"] != None:
@@ -173,10 +176,6 @@ def waitMove():
                     #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
                     #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
                     #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                    break
-                case "closeWindow":
-                    stop = True
-                    client.close()
                     break
 
 turn = False
@@ -247,7 +246,7 @@ def clickCard(card):
                         nScope += 1
 
                     inviaJSON({
-                        "request": "enemyMove",
+                        "request": "move",
                         "cardPlayed": cardToPlay,
                         "tableCardsPicked": selectedCards,
                         "msg": msg
@@ -276,8 +275,9 @@ def clickCard(card):
 
 def getMoves(card, table):
     possibilities = []
-    numCarta = getNumber(card.value)
+    numCarta = getNumber(card)
     somma = 0
+    tableCards = [c.value for c in table]
 
     for c in table:
         n = getNumber(c.value)
@@ -294,24 +294,24 @@ def getMoves(card, table):
         else:
             #NON HO CARTE DELLO STESSO VALORE SUL TAVOLO E CONTINUO A CERCARE COMBINAZIONI
 
-            tableCards = [c.value for c in table]
+            
             #tableCard = copia del table ma solo con i .value così
-
             for i in range(2, len(table)):
                 #non si deve copiare l'intero oggetto grafico
                 allPermutation = [list(perm) for perm in permutations(tableCards, i)]
                 #ritorno una lista di permutazioni di tutte le permutazioni possibili
-                
                 for perm in allPermutation:
+                    print(f"{perm}")
                     somma = 0
                     for singleCardperm in perm:
                         somma += getNumber(singleCardperm)
 
                     if somma == numCarta:
                         perm = sorted(perm)
-                        if not (perm in possibilities):
+                        if perm not in possibilities:
                             possibilities.append(
-                                [c for c in table if c.value in perm]
+                                #[c for c in table if c.value in perm]
+                                perm
                                 #aggiungo l'oggetto grafico e non solo il .value
                             )
         
