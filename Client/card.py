@@ -72,7 +72,7 @@ class Card(CTkLabel):
 
                 y = rect.getY(x)
                 self.place(x=x, y=y, anchor="center")
-                #self.update()
+                self._update_image()
                 if(index == 2):
                     time.sleep(0.000001)
                     index = 0
@@ -84,7 +84,6 @@ class Card(CTkLabel):
         if(not self.eventAnimation.is_set()):
             self.waitBeforeAnimation = timeW
             self.eventAnimation.set()
-        else: print("la condizione è",  self.eventAnimation.is_set())
 
 class HandSpace:
 

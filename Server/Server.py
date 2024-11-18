@@ -41,7 +41,11 @@ mazzoOrdinato = [
 ]
 
 def riceviJSON(client, qta = 1024):
-    return parseObject(client.recv(qta).decode("utf-8"))
+    if client:
+        return parseObject(client.recv(qta).decode("utf-8"))
+    else:
+        return {"request": ""}
+
 
 def inviaJSON(messaggio, client):
     messaggio = stringifyObject(messaggio).encode()

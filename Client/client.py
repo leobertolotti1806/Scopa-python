@@ -32,14 +32,14 @@ def chiusura(root):
         #SE HAI PROBLEMI E PER FACILITARTI LA VITA DEVI CAMBIARE QUESTA IF
         #PUOI VERIFICARE SE IL CLIENT E' ANCORA CONNESSO AL SERVER 
         inviaJSON({"request": "closingClient"})
+        inviaJSON({"request": "closingClient"})
         print("SONO in una partita e chiudo il client")
+        root.destroy()
     else:
         #NON SONO ANCORA IN UNA PARTITA
         print("non sono in una partita e chiudo il client")
         inviaJSON({"request": "stopWaiting"})
-
-    root.destroy()
-
+        root.destroy()
 
 #Host = "172.27.128.1" MAXWELL PC LEO
 #Host = "192.168.178.24" PC LEO CASA
@@ -193,7 +193,7 @@ nScope = 0
 setteBello = False
 
 def getNumber(card):
-    return int(card[-1])
+    return int(card[1:])
 
 def clickCard(card):
     # SE GIOCO UN 8 
@@ -283,7 +283,7 @@ def getMoves(card, table):
         n = getNumber(c.value)
 
         if n == numCarta:
-            possibilities.append(c)
+            possibilities.append([c])
             
         somma += n
 
@@ -301,7 +301,6 @@ def getMoves(card, table):
                 allPermutation = [list(perm) for perm in permutations(tableCards, i)]
                 #ritorno una lista di permutazioni di tutte le permutazioni possibili
                 for perm in allPermutation:
-                    print(f"{perm}")
                     somma = 0
                     for singleCardperm in perm:
                         somma += getNumber(singleCardperm)
@@ -309,10 +308,8 @@ def getMoves(card, table):
                     if somma == numCarta:
                         perm = sorted(perm)
                         if perm not in possibilities:
-                            possibilities.append(
-                                #[c for c in table if c.value in perm]
-                                perm
-                                #aggiungo l'oggetto grafico e non solo il .value
-                            )
-        
+                            possibilities.append(perm)
+            for i in range(len(possibilities)):
+                possibilities[i] = [c for c in table if c.value in possibilities[i]]
+            #includo nell array non solo i .value ma tutto l'oggetto grafico
     return possibilities

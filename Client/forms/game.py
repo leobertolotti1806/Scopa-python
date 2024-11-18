@@ -18,15 +18,6 @@ class Game:
         self.frame.pack(fill="both", expand=True)
         """ self.frame.grid_rowconfigure(1, weight=1)
         self.frame.grid_columnconfigure(1, weight=1) """
-
-        image = customtkinter.CTkImage(Image.open("media/logoBack.png"), size=(140, 40))
-        self.lbl = customtkinter.CTkLabel(
-            master=self.frame,
-            image=image,
-            text=""
-        )
-
-        self.lbl.place(x=centerX(), y=LOGO_Y, anchor="center")
         
         self.msgBox = MessageBox(root=self.frame)
         client.waitForGame(self.user, self.InitGame, self.Error)
@@ -53,6 +44,14 @@ class Game:
         self.msgBox.close()
 
         self.user2 = obj['user2']
+
+        image = customtkinter.CTkImage(Image.open("media/logoBack.png"), size=(140, 40))
+        self.lbl = customtkinter.CTkLabel(
+            master=self.frame,
+            image=image,
+            text=""
+        )
+        self.lbl.place(x=centerX(), y=LOGO_Y, anchor="center")
 
         self.lbluser1 = customtkinter.CTkLabel(master=self.frame, text=self.user, text_color=WHITE, font=default_font_subtitle())
         self.lbluser1.place(x=30, y=R_HEIGHT - 50, anchor="sw")
@@ -133,20 +132,21 @@ class Game:
 
                     le card sono oggetti!!
                 """
-                """ if(len(possibleMoves) == 0):
+                if(len(possibleMoves) == 0):
+                    self.space1.cards.remove(card)
+                    self.space1.calculate()
                     self.table.addCard(card)
-                elif (possoPrendere1opiuCarteDelloStessoNumeroDellaCartaCheSiVuoleGiocare):
+                elif (len(possibleMoves) == 1):
+                    self.space1.cards.remove(card)
+                    self.space1.calculate()
                     self.execMove(card, possibleMoves[0])
                 else:
                     #self.chooseMove(card, pickCards)
-                    pass """
+                    pass
 
             
 
     def execMove(self, card, pickCard):
-        #self.space1.calculate()
-        self.space1.cards.remove(card)
-        self.space1.calculate()
 
         pickCard.append(card)
         self.table.cards.append(card)
@@ -169,7 +169,7 @@ class Game:
             )
             #self.table.waitForRemove(card, pickCard)
         self.table.waitAnimations()
-        self.table.removeCards() 
+        self.table.removeCards()
 
     def setStatus(self):
         if(self.animation.thread.is_alive()):

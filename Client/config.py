@@ -58,7 +58,7 @@ class MessageBox:
             font=default_font_bold(),
         )
         self.lbl.pack(pady=20, padx=20)
-        self.frame.grid(row=1, column=1)
+        self.frame.place(x=centerX(), y=centerY(), anchor="center")
     
     def error(self, msg):
         self.lbl.configure(text=msg, text_color=RED)
