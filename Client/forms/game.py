@@ -136,18 +136,20 @@ class Game:
                     self.space1.cards.remove(card)
                     self.space1.calculate()
                     self.table.addCard(card)
+                    #inviaJSON
                 elif (len(possibleMoves) == 1):
                     self.space1.cards.remove(card)
                     self.space1.calculate()
                     self.execMove(card, possibleMoves[0])
+                    #inviaJSON
                 else:
-                    #self.chooseMove(card, pickCards)
+                    self.chooseMove(card, possibleMoves)
+                    #inviaJSON
                     pass
 
             
 
     def execMove(self, card, pickCard):
-
         pickCard.append(card)
         self.table.cards.append(card)
         self.table.rmCards = pickCard
@@ -170,6 +172,57 @@ class Game:
             #self.table.waitForRemove(card, pickCard)
         self.table.waitAnimations()
         self.table.removeCards()
+
+    def chooseMove(self, card, possibleMoves):
+        #creare bottoni
+        self.currentMove = 0
+        self.btnMove = customtkinter.CTkButton(
+            master=self.frame, 
+            text="OK", 
+            height=40, 
+            width=100, 
+            fg_color=WHITE, 
+            text_color=DARK_GRAY, 
+            font=default_font_medium_bold(),
+            command= lambda m=possibleMoves, c=card: self.confirmMove(c, m)
+        )
+        self.btnMove.place(x=centerX(), y=LOGO_Y + 100, anchor="center")
+
+        imageL = customtkinter.CTkImage(Image.open("media/arrowL.png"), size=(40, 40))
+        self.arrowL = customtkinter.CTkLabel(
+            master=self.frame,
+            image=imageL,
+            text=""
+        )
+        self.arrowL.place(x=centerX() - 60, y=LOGO_Y + 100, anchor="center")
+        self.arrowL.bind("<Button-1>", lambda event, m=possibleMoves: self.scrollMove(-1, m))
+
+        imageR = customtkinter.CTkImage(Image.open("media/arrowR.png"), size=(40, 40))
+        self.arrowR = customtkinter.CTkLabel(
+            master=self.frame,
+            image=imageR,
+            text=""
+        )
+        self.arrowR.place(x=centerX() + 60, y=LOGO_Y + 100, anchor="center")
+        self.arrowR.bind("<Button-1>", lambda event, m=possibleMoves: self.scrollMove(1, m))
+        
+        self.displayPossibleMove(possibleMoves)
+
+    def scrollMove(self, change, possibleMoves):
+        print("scrolla")
+        self.currentMove += change
+
+        self.displayPossibleMove(possibleMoves)
+
+    def displayPossibleMove(self, possibleMoves):
+        for i in self.table.cards:
+            i.configure(bg_color="transparent")
+
+        for i in possibleMoves[abs(self.currentMove) % len(possibleMoves)]:
+            i.configure(bg_color=RED)
+
+    def confirmMove(self, card, possibleMoves):
+        self.execMove(card, possibleMoves[abs(self.currentMove) % len(possibleMoves)])
 
     def setStatus(self):
         if(self.animation.thread.is_alive()):

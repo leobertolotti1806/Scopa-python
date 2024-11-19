@@ -6,6 +6,7 @@ from animation import Rect
 import time
 
 semaphore = threading.Semaphore()
+eventStop = threading.Event()
 stop = []
 
 class Card(CTkLabel):
@@ -55,6 +56,7 @@ class Card(CTkLabel):
         semaphore.acquire()
         stop.remove(True)
         semaphore.release()
+        eventStop.set()
         self.waitAnimation()
 
     def animation(self, x, y, rect : Rect):
@@ -74,7 +76,7 @@ class Card(CTkLabel):
                 self.place(x=x, y=y, anchor="center")
                 self._update_image()
                 if(index == 2):
-                    time.sleep(0.000001)
+                    time.sleep(0.0000005)
                     index = 0
 
     def move(self, p2, timeW = 0, size = "NaN"):
@@ -119,20 +121,23 @@ class HandSpace:
                     onclick=onclick
                 )
             )
-        self.calculate()
+        self.calculate(True)
     
-    def calculate(self):
+    def calculate(self, delay=0):
         spaceSize = (len(self.cards) * self.size[0]) + (len(self.cards) * 10)
         #            spazio occuppato dalle carte    spazio margini
         xstart = centerX() - (spaceSize / 2)
+        time = 0
 
         for i in range(len(self.cards)):
+            if(delay != 0):
+                time = i
             self.cards[i].move(
                 (
                     xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i),
                     self.y
                 ),
-                timeW=(1 * i)
+                timeW = time
             )
             
 class TableSpace:
@@ -220,8 +225,10 @@ class TableSpace:
                 return self.cards.pop(i)
             
     def waitAnimations(self):
-        while len(stop) != 0:
-            time.sleep(0.0001)
+        eventStop.wait()
+        eventStop.clear()
+        if(len(stop) != 0):
+            self.waitAnimations()
         
 
             

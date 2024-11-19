@@ -8,6 +8,7 @@ DARK_GREEN = "#3c6f44"
 GREY = "#525252"
 DARK_GRAY = "#2b2b2b"
 WHITE = "#FFFFFF"
+DARK_WHITE = "#f0f0f0"
 RED = "#ff7d7d"
 
 #sizes
@@ -25,6 +26,9 @@ def default_font_bold():
 
 def default_font_medium():
     return customtkinter.CTkFont(family="Microsoft YaHei", size=18, weight="normal")
+
+def default_font_medium_bold():
+    return customtkinter.CTkFont(family="Microsoft YaHei", size=18, weight="bold")
 
 def default_font_title():
     return customtkinter.CTkFont(family="Microsoft YaHei", size=40, weight="bold")
