@@ -1,3 +1,6 @@
+#debug
+from os import system
+
 from config import *
 # modulo con le funzioni per il funzionamento del gioco
 import client
@@ -11,6 +14,7 @@ class Game:
     table = None
 
     def __init__(self, root : customtkinter.CTk, user):
+        system(f"title Prompt {user}")
         self.user = user
         self.root = root
         self.frame = customtkinter.CTkFrame(master=root,  fg_color=BACK_COLOR)
