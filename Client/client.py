@@ -30,15 +30,14 @@ def chiusura(root):
     if waitMoveThread.is_alive():
         #HO ANCORA IL THREAD CONNESSO AL SERVER
         #SE HAI PROBLEMI E PER FACILITARTI LA VITA DEVI CAMBIARE QUESTA IF
-        #PUOI VERIFICARE SE IL CLIENT E' ANCORA CONNESSO AL SERVER 
-        inviaJSON({"request": "closingClient"})
+        #PUOI VERIFICARE SE IL CLIENT E' ANCORA CONNESSO AL SERVER
         inviaJSON({"request": "closingClient"})
         print("SONO in una partita e chiudo il client")
         root.destroy()
     else:
         #NON SONO ANCORA IN UNA PARTITA
-        print("non sono in una partita e chiudo il client")
         inviaJSON({"request": "stopWaiting"})
+        print("non sono in una partita e chiudo il client")
         root.destroy()
 
 #Host = "172.27.128.1" MAXWELL PC LEO
@@ -47,7 +46,6 @@ Host = "192.168.178.24"
 Host = socket.gethostbyname(socket.gethostname())
 Porta = 9999
 Indirizzo = (Host, Porta)
-
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 def waitForGame(nickname, resolver, error):
@@ -63,6 +61,7 @@ def connect(nickname, resolver, error):
         # Gestisce errori di connessione
         client.close()
         error(f'Impossibile Collegarsi al Server\n\n({e})')
+
 
 lock = threading.Lock()
 
@@ -105,78 +104,83 @@ def calculateAndSendPoints():
 
 def waitMove():
     global data
-    stop = False
+    endThread = False
 
-    while not stop:
+    inviaJSON({"request": "startGameOk"})
+
+    while not endThread:
         with lock:
             data = riceviJson()
+
             turn = True
-
-            match data["request"]:
-                case "move":
-                    turn = True
+            if data != None:
+                match data["request"]:
+                    case "move":
+                        turn = True
+                        
+                        if data["msg"] != None:
+                            pass
+                            #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
+                            #ANIMAZIONE QUI??
+                            #ANIMAZIONE QUI??
                     
-                    if data["msg"] != None:
-                        pass
-                        #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
-                        #ANIMAZIONE QUI??
-                        #ANIMAZIONE QUI??
-                
 
-                    if len(data["tableCardsPicked"]) == 0:
-                        #non si è presa NESSUNA carta dal tavolo => aggiungo la carta al tavolo
-                        table.append(data["cardPlayed"])
-                        #ANIMAZIONE QUI??
-                        #ANIMAZIONE QUI??
-                        #ANIMAZIONE QUI??
-                    else:
-                        #si sono prese 1 o più carte dal tavolo => le tolgo dal tavolo
-                        for c in data["tableCardsPicked"]:
-                            table.remove(c)
+                        if len(data["tableCardsPicked"]) == 0:
+                            #non si è presa NESSUNA carta dal tavolo => aggiungo la carta al tavolo
+                            table.append(data["cardPlayed"])
                             #ANIMAZIONE QUI??
                             #ANIMAZIONE QUI??
                             #ANIMAZIONE QUI??
+                        else:
+                            #si sono prese 1 o più carte dal tavolo => le tolgo dal tavolo
+                            for c in data["tableCardsPicked"]:
+                                table.remove(c)
+                                #ANIMAZIONE QUI??
+                                #ANIMAZIONE QUI??
+                                #ANIMAZIONE QUI??
+                                #ANIMAZIONE QUI??
+
+
+                        """ showPickCards(cardGiocata, cardDaPrendereDalTavolo)
+                        cardGiocata è data["cardPlayed"]
+                        cardDaPrendereDalTavolo è data["tableCardsPicked"] """
+                        break
+
+                    case "newCards":
+                        if data["msg"] != None:
+                            pass
+                            #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
+                            #ANIMAZIONE QUI??
                             #ANIMAZIONE QUI??
 
-
-                    """ showPickCards(cardGiocata, cardDaPrendereDalTavolo)
-                    cardGiocata è data["cardPlayed"]
-                    cardDaPrendereDalTavolo è data["tableCardsPicked"] """
-                    break
-
-                case "newCards":
-                    if data["msg"] != None:
-                        pass
-                        #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
-                        #ANIMAZIONE QUI??
-                        #ANIMAZIONE QUI??
-
-                    cards = data["cards"]
-                    #Game.BuildDrawCard(cards)
-                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                    #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                    break
-                case "calculatePoints":
-                    stop = True
-                    
-                    calculateAndSendPoints()
-                    
-                    #showPoints()
-                    #showPoints()
-                    #showPoints()
-                    #showPoints()
-                    #showPoints()
-                    break
-                case "endGameError":
-                    stop = True
-                    #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                    #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                    #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                    break
+                        cards = data["cards"]
+                        #Game.BuildDrawCard(cards)
+                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
+                        break
+                    case "calculatePoints":
+                        endThread = True
+                        
+                        calculateAndSendPoints()
+                        
+                        #showPoints()
+                        #showPoints()
+                        #showPoints()
+                        #showPoints()
+                        #showPoints()
+                        break
+                    case "endGameError":
+                        endThread = True
+                        inviaJSON({"request": "confirmedForceQuit"})
+                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+            else:
+                endThread = True
 
 turn = False
 waitMoveThread = threading.Thread(target=waitMove)
