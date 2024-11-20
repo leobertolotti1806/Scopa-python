@@ -26,6 +26,7 @@
 #RISOLVI PROBLEMA CHIUSURA MAIN (request=closingClient)
 #RISOLVI PROBLEMA CHIUSURA MAIN (request=closingClient)
 # config contiene customtkinter
+
 from config import *
 
 # import Forms

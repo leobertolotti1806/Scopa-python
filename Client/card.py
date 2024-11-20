@@ -239,6 +239,7 @@ class TableSpace:
                         self.y
                     )
                 )
+        self.rmCards = []
         self.calculate()
 
     def indexRm(self, card):
