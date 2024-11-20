@@ -148,11 +148,14 @@ class Game:
                     pass
 
             
-
-    def execMove(self, card, pickCard):
+    def execMove(self, card : Card, pickCard):
+        # ora la carte che voglio giocare per proseguire devono aspettare lo stop
         pickCard.append(card)
         self.table.cards.append(card)
         self.table.rmCards = pickCard
+
+        for i in self.table.rmCards:
+            i.waitStop = True
         """self.table.cards.append(card)
         pickCard.append(card)
         self.table.removeCards(pickCard)"""
@@ -173,6 +176,7 @@ class Game:
         self.table.waitAnimations()
         self.table.removeCards()
 
+    
     def chooseMove(self, card, possibleMoves):
         #creare bottoni
         self.currentMove = 0
@@ -180,7 +184,8 @@ class Game:
             master=self.frame, 
             text="OK", 
             height=40, 
-            width=100, 
+            width=100,
+            bg_color=BACK_COLOR,
             fg_color=WHITE, 
             text_color=DARK_GRAY, 
             font=default_font_medium_bold(),
@@ -214,16 +219,23 @@ class Game:
 
         self.displayPossibleMove(possibleMoves)
 
-    def displayPossibleMove(self, possibleMoves):
-        for i in self.table.cards:
-            i.configure(bg_color="transparent")
-
+    def displayPossibleMove(self, possibleMoves): 
+        self.clearCardsBackground()
         for i in possibleMoves[abs(self.currentMove) % len(possibleMoves)]:
             i.configure(bg_color=RED)
 
     def confirmMove(self, card, possibleMoves):
         self.execMove(card, possibleMoves[abs(self.currentMove) % len(possibleMoves)])
+        self.btnMove.destroy()
+        self.arrowL.destroy()
+        self.arrowR.destroy()
+        self.clearCardsBackground()
 
+    def clearCardsBackground(self):
+        for i in self.table.cards:
+            i.configure(bg_color="transparent")
+
+    
     def setStatus(self):
         if(self.animation.thread.is_alive()):
             self.animation.waitStop()

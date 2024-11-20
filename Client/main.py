@@ -32,7 +32,7 @@ from config import *
 from forms.login import *
 
 from animation import *
-
+    
 customtkinter.set_appearance_mode("dark") # dark, system
 #customtkinter.set_default_color_theme("green")
 

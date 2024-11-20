@@ -6,7 +6,8 @@ from animation import Rect
 import time
 
 semaphore = threading.Semaphore()
-eventStop = threading.Event()
+eventStopAnimation = threading.Event()
+eventContinueAnimation = threading.Event()
 stop = []
 
 class Card(CTkLabel):
@@ -19,6 +20,7 @@ class Card(CTkLabel):
             size,
             root : customtkinter.CTk,
             onclick = None,
+            waitStop = False,
             **args
         ):
         image = customtkinter.CTkImage(cardImg, size=size)
@@ -28,6 +30,7 @@ class Card(CTkLabel):
         self.value = value
         self.img = cardImg
         self.size = size
+        self.waitStop = waitStop
         self.eventAnimation = threading.Event()
         self.waitBeforeAnimation = 0
         if(onclick != None):
@@ -41,23 +44,42 @@ class Card(CTkLabel):
         y = self.pos[1]
         sizeX = self.size[0]
         sizeY = self.size[1]
+        print(f"{self.value} sono pronto a partire")
         self.eventAnimation.wait()
-        semaphore.acquire()
-        stop.append(True)
-        semaphore.release()
+
+        print(f"{self.value} animazione verso {x};{y} partita")
+
+        if(self.waitStop):
+            semaphore.acquire()
+            stop.append(True)
+            semaphore.release()
+
         if(self.waitBeforeAnimation != 0):
             time.sleep(self.waitBeforeAnimation)
             self.waitBeforeAnimation = 0
+
         if(sizeX != self.size):
             image = customtkinter.CTkImage(self.img, size=self.size)
             self.configure(image=image)
+
         self.animation(x, y, Rect((x, y), self.pos))
         self.eventAnimation.clear()
-        semaphore.acquire()
-        stop.remove(True)
-        semaphore.release()
-        eventStop.set()
+
+        # aspetto che waitAnimations mi dia il via per fare uno stop
+        if(self.waitStop):
+            print(f"{self.value} aspetto a mandare il mio stop")
+            eventContinueAnimation.wait()
+            semaphore.acquire()
+            stop.remove(True)
+            semaphore.release()
+            # infine imposto l'aggiornamento del waitAnimation
+            eventStopAnimation.set()
+            # ripristino la mia condizione di waitStop così che le prossime animazioni almeno che non me lo chieda lo user non aspetterò nulla
+            self.waitStop = False
+            print(f"{self.value} stop inviato")
+
         self.waitAnimation()
+        # in sostanza io non posso iniziare la prossima animazione se non ho stoppato quella precedente
 
     def animation(self, x, y, rect : Rect):
         if(not rect.error):
@@ -225,10 +247,15 @@ class TableSpace:
                 return self.cards.pop(i)
             
     def waitAnimations(self):
-        eventStop.wait()
-        eventStop.clear()
-        if(len(stop) != 0):
-            self.waitAnimations()
+        # il wait avvisa i thread che si può mandare uno stop (continue animation)
+        while True:
+            eventContinueAnimation.set()
+            # dopo di che aspetta che qualcuno mandi uno stop
+            eventStopAnimation.wait()
+            eventStopAnimation.clear()
+            eventContinueAnimation.clear()
+            if(len(stop) == 0):
+                break
         
 
             
