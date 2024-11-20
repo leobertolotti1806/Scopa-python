@@ -1,8 +1,5 @@
 @echo off
 
-@echo off
-mode con:cols=80 lines=25
-
 setlocal enabledelayedexpansion
 
 REM Imposta la cartella che vuoi controllare
@@ -20,5 +17,6 @@ REM Mostra il numero di cmd.exe avviati nella directory specifica
 title player %count%
 
 :: Continua con il resto del codice...
+start cmd.exe /k "clientSimulation.bat"
 python .\main.py
 pause
