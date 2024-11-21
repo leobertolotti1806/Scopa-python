@@ -31,6 +31,7 @@ lock = threading.Lock()
 
 # Lista dei CLIENT con attributi necessari per controlli
 clients = []
+checkClientsThreadList = []
 
 mazzoOrdinato = [
     "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10",
@@ -53,50 +54,53 @@ def inviaJSON(messaggio, client):
         # Invia al SINGOLO client
         client.send(messaggio)
 
-def checkClient(client, nome):
+def checkClient(client):
     obj = {}
     endThread = False
 
     while not endThread:
-        obj = riceviJSON(client)
+        obj = riceviJSON(client["client"])
 
         if obj["request"] == "startGameOk" or obj["request"] == "stopWaiting":
             endThread = True
 
     if obj["request"] == "stopWaiting":
-        print(f"[checkClient di {nome}]: Chiudo il client [{nome}] e rimuovo la connessione al server")
+        print(f"[checkClient di {client['nome']}]: Chiudo il client [{client['nome']}] e rimuovo la connessione al server")
 
-        client.close()
+        client["client"].close()
 
         with lock:
             clients.remove(client)
-            #checkClientsThreadList.remove(threading.current_thread())
+            checkClientsThreadList.remove(threading.current_thread())
+
     
-    print(f"[checkClient di {nome}]: Completato!!!")
+    print(f"[checkClient di {client['nome']}]: Completato!!!")
 
 
 def matchClient(client, addr):
     nome = riceviJSON(client)["nome"]
     print("[matchClient]: Si è connesso " + nome)
 
-    client = {
+    clientObj = {
         "client": client,
         "addr": addr,
-        "nome": nome,
-        "checkThread": threading.Thread(target=checkClient, args = (client, nome))
+        "nome": nome
         }
 
     #THREAD CHE CONTROLLA LA CHIUSURA DEI CLIENT E CORREGGE IL FUNZIONAMENTO
-    client["checkThread"].start()
+    checkClientThread = threading.Thread(target=checkClient, args = (clientObj,))
+    checkClientThread.start()
 
     with lock:
-        clients.append(client)
+        checkClientsThreadList.append(checkClientThread)
+        clients.append(clientObj)
     
     if len(clients) % 2 == 0 and len(clients) > 1:
         #si collegano 2 giocatori
         # Avvio un Nuovo THREAD per la gestione della partita
 
         threading.Thread(target=partita, args = (clients[-1], clients[-2],
+            checkClientsThreadList[-1], checkClientsThreadList[-2],
             random.sample(mazzoOrdinato, len(mazzoOrdinato)))).start()
 
     print(f"[matchClient]: Connessioni Attive {len(clients)}")
@@ -116,8 +120,7 @@ def avviaServer():
 
         
 # Metodo per Gestire i Messaggi in Arrivo dal CLIENT
-def partita(client1, client2, mazzo):
-
+def partita(client1, client2, check1, check2, mazzo):
     tavolo = pesca(mazzo, 4)
 
     inviaJSON({
@@ -137,8 +140,12 @@ def partita(client1, client2, mazzo):
         }, client2["client"])
 
     #Aspetto che i due client mi confermino di avviare la partita
-    client1["checkThread"].join()
-    client2["checkThread"].join()
+    check1.join()
+    check2.join()
+
+    with lock:
+        checkClientsThreadList.remove(check1)
+        checkClientsThreadList.remove(check2)
 
     game = {
         "nMosse": 0,
@@ -146,7 +153,7 @@ def partita(client1, client2, mazzo):
         "mazzo": mazzo
     }
 
-    print(f"[partita di {client1["nome"]} - {client2["nome"]}]: Avviata")
+    print(f"[partita di {client1['nome']} - {client2['nome']}]: Avviata")
 
     t1 = threading.Thread(target=mosse, args=(client1, client2, game))
     t1.name = client1["nome"]
@@ -170,7 +177,7 @@ def partita(client1, client2, mazzo):
         clients.remove(client1)
         clients.remove(client2)
 
-    print(f"[partita di {client1["nome"]} - {client2["nome"]}]: Client rimossi con successo e termino la partita")
+    print(f"[partita di {client1['nome']} - {client2['nome']}]: Client rimossi con successo e termino la partita")
 
 def pesca(mazzo, nCarte):
     carteScelte = random.sample(mazzo, nCarte)
@@ -185,13 +192,13 @@ def mosse(client, cAvversario, game):
     while not game["err"] and game["nMosse"] < 30:
         # Riceve la mossa dal giocatore attuale
         mossa = riceviJSON(client["client"])
-        print(f"[{client["nome"]}]: Mossa ricevuta: {mossa}")
+        print(f"[{client['nome']}]: Mossa ricevuta: {mossa}")
 
         if mossa["request"] == "closingClient":
             with lock:
                 game["err"] = True
             
-            print(f"[{client["nome"]}]: ho chiuso la finestra")
+            print(f"[{client['nome']}]: ho chiuso la finestra")
 
             inviaJSON({"request": "endGameError"}, cAvversario["client"])
             
@@ -199,7 +206,7 @@ def mosse(client, cAvversario, game):
             with lock:
                 game["err"] = True
 
-            print(f"[{client["nome"]}]: Il client avversario [{cAvversario["nome"]}] ha terminato la partita e confermo l'uscita")
+            print(f"[{client['nome']}]: Il client avversario [{cAvversario['nome']}] ha terminato la partita e confermo l'uscita")
         else:
             # Invia la mossa all"altro giocatore
             if len(mossa["tableCardsPicked"]) > 0:
