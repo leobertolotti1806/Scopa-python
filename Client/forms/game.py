@@ -113,7 +113,7 @@ class Game:
 
     def clickCard(self, card : Card):
         #INGLOVA FUNZIONAMENTO MOSSE / GIOCO DA CLIENT.CLICKCARD
-        if client.turn:
+        if client.turn and len(stop) == 0:
             #array table solo con i .value delle card
             if card.value not in [c.value for c in self.table.cards]:
                 #SE E' UNA CARTA DEL TAVOLO NON DEVO ESEGUIRE IL CALCOLO DELLE COMBINAZIONI
@@ -158,9 +158,9 @@ class Game:
         self.table.cards.append(card)
         self.table.rmCards = pickCard
 
-        for i in self.table.rmCards:
+        """for i in self.table.rmCards:
             i.waitStop = True
-        """self.table.cards.append(card)
+        self.table.cards.append(card)
         pickCard.append(card)
         self.table.removeCards(pickCard)"""
         threading.Thread(target=self.renderMove).start()
@@ -177,9 +177,13 @@ class Game:
                 size=CARDS_TABLE_SIZE
             )
             #self.table.waitForRemove(card, pickCard)
-        self.table.waitAnimations()
+        #self.table.waitAnimations()
+        #waitAnimations() # aspetto la fine di tutte le animazioni
+        stopAnimations.clear() # resetto lo stop
+        stopAnimations.wait() # aspetto che mi arriva da qualche carta che sa di essere ultima un evento
         self.table.removeCards()
-
+        stopAnimations.clear()
+        stopAnimations.wait()
     
     def chooseMove(self, card, possibleMoves):
         #creare bottoni
@@ -229,6 +233,8 @@ class Game:
             i.configure(bg_color=RED)
 
     def confirmMove(self, card, possibleMoves):
+        self.space1.cards.remove(card)
+        self.space1.calculate()
         self.execMove(card, possibleMoves[abs(self.currentMove) % len(possibleMoves)])
         self.btnMove.destroy()
         self.arrowL.destroy()

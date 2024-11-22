@@ -5,10 +5,35 @@ import threading
 from animation import Rect
 import time
 
+# PROVA 1
 semaphore = threading.Semaphore()
-eventStopAnimation = threading.Event()
 eventContinueAnimation = threading.Event()
+eventStartAnimation = threading.Event()
+sendStop = threading.Event()
+
+# PROVA 2
+stopAnimations = threading.Event()
+
+eventStartAnimation.clear()
+sendStop.set()
 stop = []
+
+def waitAnimations():
+    # il wait avvisa i thread che si può mandare uno stop (continue animation)
+    while True:
+        # dopo di che aspetta che qualcuno mandi uno stop
+        eventStartAnimation.wait()
+        if(len(stop) == 0):
+            print("calma piatta...smetto di stoppare")
+            eventStartAnimation.clear()
+            sendStop.set()
+            break
+        sendStop.set()
+        eventContinueAnimation.wait()
+        if(sendStop.is_set()):
+            sendStop.clear()
+        if(eventContinueAnimation.is_set()):
+            eventContinueAnimation.clear()
 
 class Card(CTkLabel):
 
@@ -20,7 +45,6 @@ class Card(CTkLabel):
             size,
             root : customtkinter.CTk,
             onclick = None,
-            waitStop = False,
             **args
         ):
         image = customtkinter.CTkImage(cardImg, size=size)
@@ -30,8 +54,8 @@ class Card(CTkLabel):
         self.value = value
         self.img = cardImg
         self.size = size
-        self.waitStop = waitStop
         self.eventAnimation = threading.Event()
+
         self.waitBeforeAnimation = 0
         if(onclick != None):
             self.bind("<Button-1>", lambda event, e=self: onclick(e))
@@ -40,48 +64,52 @@ class Card(CTkLabel):
         self.render.start()
 
     def waitAnimation(self):
-        x = self.pos[0]
-        y = self.pos[1]
-        sizeX = self.size[0]
-        sizeY = self.size[1]
-        print(f"{self.value} sono pronto a partire")
-        self.eventAnimation.wait()
+        while True:
+            x = self.pos[0]
+            y = self.pos[1]
+            sizeX = self.size[0]
+            sizeY = self.size[1]
+            print(Back.WHITE + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " sono pronto a partire" + Back.BLACK + Fore.WHITE, end="\n")
 
-        print(f"{self.value} animazione verso {x};{y} partita")
+            #if(self.waitStop):
+                # faccio partire lo stopper che entra in un loop che aspetta si svuoti il vettore stop
+                # e poi breakka il ciclo
+                #self.stopper()
+            self.eventAnimation.wait()
 
-        if(self.waitStop):
+            print(Back.LIGHTBLACK_EX + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " animazione verso" + Fore.GREEN + f" {x};{y}" + Fore.WHITE +" partita" + Back.BLACK + Fore.WHITE, end="\n")
+
+            #eventStartAnimation.set()
+
             semaphore.acquire()
             stop.append(True)
             semaphore.release()
 
-        if(self.waitBeforeAnimation != 0):
-            time.sleep(self.waitBeforeAnimation)
-            self.waitBeforeAnimation = 0
+            if(self.waitBeforeAnimation != 0):
+                time.sleep(self.waitBeforeAnimation)
+                self.waitBeforeAnimation = 0
 
-        if(sizeX != self.size):
-            image = customtkinter.CTkImage(self.img, size=self.size)
-            self.configure(image=image)
+            if(sizeX != self.size):
+                image = customtkinter.CTkImage(self.img, size=self.size)
+                self.configure(image=image)
 
-        self.animation(x, y, Rect((x, y), self.pos))
-        self.eventAnimation.clear()
+            self.animation(x, y, Rect((x, y), self.pos))
+            self.eventAnimation.clear()
 
-        # aspetto che waitAnimations mi dia il via per fare uno stop
-        if(self.waitStop):
-            print(f"{self.value} aspetto a mandare il mio stop")
-            eventContinueAnimation.wait()
+            # aspetto che waitAnimations mi dia il via per fare uno stop
             semaphore.acquire()
             stop.remove(True)
             semaphore.release()
-            # infine imposto l'aggiornamento del waitAnimation
-            eventStopAnimation.set()
-            # ripristino la mia condizione di waitStop così che le prossime animazioni almeno che non me lo chieda lo user non aspetterò nulla
-            self.waitStop = False
-            print(f"{self.value} stop inviato")
-
-        self.waitAnimation()
-        # in sostanza io non posso iniziare la prossima animazione se non ho stoppato quella precedente
+            # aspetto che nessuno stia gestendo già un controllo di stop
+            # PROVA 1 #sendStop.wait()
+            # ora scateno un evento in modo tale che tutti coloro che aspettavano di partire se stop[] è vuoto possono farlo
+            # PROVA 1 # eventContinueAnimation.set()
+            self.checkStop()
+            #self.waitStop = False
+            # in sostanza io non posso iniziare la prossima animazione se non ho stoppato quella precedente
 
     def animation(self, x, y, rect : Rect):
+        print(Back.CYAN + Fore.BLUE + f"{self.value}:" + Fore.WHITE + f" ha iniziato a percorrere la retta:" + Fore.GREEN + f" y = {rect.m}x + {rect.q}" + Fore.WHITE + Back.BLACK, end="\n")
         if(not rect.error):
             index = 0
             while x != self.pos[0]:
@@ -108,6 +136,12 @@ class Card(CTkLabel):
         if(not self.eventAnimation.is_set()):
             self.waitBeforeAnimation = timeW
             self.eventAnimation.set()
+
+    def checkStop(self):
+        print(Fore.RED + "controllo la fine stop..." + Fore.WHITE)
+        if(len(stop) == 0):
+            print(Back.WHITE + Fore.BLUE + f"{self.value}:" + Back.BLACK + Fore.GREEN + " mando la fine stop" + Fore.WHITE)
+            stopAnimations.set()
 
 class HandSpace:
 
@@ -246,17 +280,6 @@ class TableSpace:
         for i in range(len(self.cards)):
             if(self.cards[i].value == card.value):
                 return self.cards.pop(i)
-            
-    def waitAnimations(self):
-        # il wait avvisa i thread che si può mandare uno stop (continue animation)
-        while True:
-            eventContinueAnimation.set()
-            # dopo di che aspetta che qualcuno mandi uno stop
-            eventStopAnimation.wait()
-            eventStopAnimation.clear()
-            eventContinueAnimation.clear()
-            if(len(stop) == 0):
-                break
         
 
             

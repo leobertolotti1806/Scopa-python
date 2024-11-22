@@ -1,4 +1,5 @@
 import customtkinter
+from colorama import Fore, Back, Style
 from PIL import Image, ImageTk, ImageDraw
 import io
 

@@ -47,6 +47,8 @@ root.minsize(width=R_WIDTH, height=R_HEIGHT)
 frame = customtkinter.CTkFrame(master=root, bg_color=BACK_COLOR, fg_color=BACK_COLOR)
 frame.pack(fill='both', expand=True)
 
+print(R_WIDTH, R_HEIGHT, end="\n")
+
 # il gioco parte dal login
 Login(frame)
 
