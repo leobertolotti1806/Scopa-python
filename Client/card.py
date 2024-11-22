@@ -5,35 +5,10 @@ import threading
 from animation import Rect
 import time
 
-# PROVA 1
 semaphore = threading.Semaphore()
-eventContinueAnimation = threading.Event()
-eventStartAnimation = threading.Event()
-sendStop = threading.Event()
 
-# PROVA 2
 stopAnimations = threading.Event()
-
-eventStartAnimation.clear()
-sendStop.set()
 stop = []
-
-def waitAnimations():
-    # il wait avvisa i thread che si può mandare uno stop (continue animation)
-    while True:
-        # dopo di che aspetta che qualcuno mandi uno stop
-        eventStartAnimation.wait()
-        if(len(stop) == 0):
-            print("calma piatta...smetto di stoppare")
-            eventStartAnimation.clear()
-            sendStop.set()
-            break
-        sendStop.set()
-        eventContinueAnimation.wait()
-        if(sendStop.is_set()):
-            sendStop.clear()
-        if(eventContinueAnimation.is_set()):
-            eventContinueAnimation.clear()
 
 class Card(CTkLabel):
 
@@ -41,19 +16,20 @@ class Card(CTkLabel):
             self,
             value,
             pos,
-            cardImg,
             size,
+            space, # hand1 (1) / hand2 (2) / table (3)
             root : customtkinter.CTk,
             onclick = None,
             **args
         ):
-        image = customtkinter.CTkImage(cardImg, size=size)
-        super().__init__(**args, image=image)
+        image = Image.open(f"media/cards/{value}.png")
+        super().__init__(**args, image=customtkinter.CTkImage(image, size=size))
         self.root = root
         self.pos = pos
         self.value = value
-        self.img = cardImg
+        self.img = image
         self.size = size
+        self.space = space
         self.eventAnimation = threading.Event()
 
         self.waitBeforeAnimation = 0
@@ -68,7 +44,7 @@ class Card(CTkLabel):
             x = self.pos[0]
             y = self.pos[1]
             sizeX = self.size[0]
-            sizeY = self.size[1]
+            value = self.value
             print(Back.WHITE + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " sono pronto a partire" + Back.BLACK + Fore.WHITE, end="\n")
 
             #if(self.waitStop):
@@ -88,6 +64,9 @@ class Card(CTkLabel):
             if(self.waitBeforeAnimation != 0):
                 time.sleep(self.waitBeforeAnimation)
                 self.waitBeforeAnimation = 0
+
+            if(value != self.value):
+                self.img = Image.open(f"media/cards/{self.value}.png")
 
             if(sizeX != self.size):
                 image = customtkinter.CTkImage(self.img, size=self.size)
@@ -129,8 +108,10 @@ class Card(CTkLabel):
                     time.sleep(0.0000005)
                     index = 0
 
-    def move(self, p2, timeW = 0, size = "NaN"):
+    def move(self, p2, timeW = 0, size = "NaN", newValue=""):
         self.pos = p2
+        if(newValue != ""):
+            self.value = newValue
         if(size != "NaN"):
             self.size = size
         if(not self.eventAnimation.is_set()):
@@ -151,6 +132,7 @@ class HandSpace:
         master,
         cards,
         size,
+        player,
         pos,
         yStart,
         onclick
@@ -158,6 +140,7 @@ class HandSpace:
         self.root = root
         self.cards = []
         self.size = size
+        self.player = player
         if(pos == "end"):
             self.x = R_WIDTH + self.size[0]
         elif(pos == "start"):
@@ -169,8 +152,8 @@ class HandSpace:
                     root= self.root,
                     master=master,
                     text="",
-                    cardImg = Image.open(f"media/cards/{cards[i]}.png"),
                     size = self.size,
+                    space = self.player,
                     anchor = "center",
                     pos = (self.x, self.y),
                     value=cards[i],
@@ -223,8 +206,8 @@ class TableSpace:
                     root= self.root,
                     master=master,
                     text="",
-                    cardImg= Image.open(f"media/cards/{cards[i]}.png"),
                     size = self.size,
+                    space = 3,
                     anchor = "center",
                     pos = (self.x, self.y),
                     value=cards[i],

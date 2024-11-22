@@ -86,6 +86,7 @@ class Game:
             self.frame,
             card,
             CARDS_HAND_SIZE,
+            player=1,
             pos= "end",
             yStart= CARDS_HAND_Y,
             onclick=self.clickCard
@@ -96,6 +97,7 @@ class Game:
             self.frame,
             ["back", "back", "back"],
             CARDS_HAND_OPPONENT_SIZE,
+            player=2,
             pos= "start",
             yStart = CARDS_HAND_OPPONENT_Y,
             onclick=self.clickCard
@@ -137,13 +139,21 @@ class Game:
                     le card sono oggetti!!
                 """
                 if(len(possibleMoves) == 0):
-                    self.space1.cards.remove(card)
-                    self.space1.calculate()
+                    if(card.space == 1):
+                        self.space1.cards.remove(card)
+                        self.space1.calculate()
+                    else:
+                        self.space2.cards.remove(card)
+                        self.space2.calculate()
                     self.table.addCard(card)
                     #inviaJSON
                 elif (len(possibleMoves) == 1):
-                    self.space1.cards.remove(card)
-                    self.space1.calculate()
+                    if(card.space == 1):
+                        self.space1.cards.remove(card)
+                        self.space1.calculate()
+                    else:
+                        self.space2.cards.remove(card)
+                        self.space2.calculate()
                     self.execMove(card, possibleMoves[0])
                     #inviaJSON
                 else:
@@ -233,8 +243,12 @@ class Game:
             i.configure(bg_color=RED)
 
     def confirmMove(self, card, possibleMoves):
-        self.space1.cards.remove(card)
-        self.space1.calculate()
+        if(card.space == 1):
+            self.space1.cards.remove(card)
+            self.space1.calculate()
+        else:
+            self.space2.cards.remove(card)
+            self.space2.calculate()
         self.execMove(card, possibleMoves[abs(self.currentMove) % len(possibleMoves)])
         self.btnMove.destroy()
         self.arrowL.destroy()
