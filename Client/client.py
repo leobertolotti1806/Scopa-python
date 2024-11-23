@@ -92,17 +92,8 @@ def calculateAndSendPoints():
     #FAI CONTROLLO VITTORIA
     #FAI CONTROLLO VITTORIA
 
-    inviaJSON({
-        "primiera": True,
-        "carte": carte,
-        "denari": denari,
-        "nScope": nScope,
-        "setteBello": setteBello,
-        "win": win
-    })
 
-
-def waitMove():
+def waitMove(game):
     global data
     endThread = False
 
@@ -111,42 +102,67 @@ def waitMove():
     while not endThread:
         with lock:
             data = riceviJson()
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
+        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
 
+
+
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
+        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
             turn = True
+
             if data != None:
                 match data["request"]:
                     case "move":
-                        turn = True
+                        #renderizzo mossa
+
+                        if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
+                            alert(f"{game.user2} ha preso sette bello!!!")
                         
-                        if data["msg"] != None:
-                            pass
-                            #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
-                            #ANIMAZIONE QUI??
-                            #ANIMAZIONE QUI??
-                    
+                        tableCardsPicked = [c for c in game.table.cards if c.value in data["tableCardsPicked"]] # carte prese dall' avversario
 
-                        if len(data["tableCardsPicked"]) == 0:
-                            #non si è presa NESSUNA carta dal tavolo => aggiungo la carta al tavolo
-                            table.append(data["cardPlayed"])
-                            #ANIMAZIONE QUI??
-                            #ANIMAZIONE QUI??
-                            #ANIMAZIONE QUI??
-                        else:
-                            #si sono prese 1 o più carte dal tavolo => le tolgo dal tavolo
-                            for c in data["tableCardsPicked"]:
-                                table.remove(c)
-                                #ANIMAZIONE QUI??
-                                #ANIMAZIONE QUI??
-                                #ANIMAZIONE QUI??
-                                #ANIMAZIONE QUI??
+                        if len(game.table.cards) - len(tableCardsPicked):
+                            nScopeAvversario += 1
 
-
+                        game.space2.cards[0].value = data["cardPlayed"]
+                        
+                        game.execMove(
+                            game.space2.cards[0], # carta giocata dall'avversario
+                            tableCardsPicked
+                        )                                
+                        #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
+                        #ANIMAZIONE QUI??
+                                
                         """ showPickCards(cardGiocata, cardDaPrendereDalTavolo)
                         cardGiocata è data["cardPlayed"]
                         cardDaPrendereDalTavolo è data["tableCardsPicked"] """
                         break
 
                     case "newCards":
+                        #IL SERVER DISTRIBUISCE LE CARTE
                         if data["msg"] != None:
                             pass
                             #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
@@ -179,103 +195,38 @@ def waitMove():
                         #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
                         #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
                         #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
             else:
                 endThread = True
 
-turn = False
-waitMoveThread = threading.Thread(target=waitMove)
+waitMoveThread = None
 data = {}
-
-#variabili per la gestione della mossa
-deck = []
-selectedCards = []
-cardToPlay = ""
-
+turn = False
 #variabili per i punteggi
 pickedCard = []
 nScope = 0
 setteBello = False
+nScopeAvversario = 0
+
+def sendMove(card, move = []):
+
+    pickedCards = [c.value for c in move]
+
+    inviaJSON({
+        "request": "move",
+        "tableCardsPicked" : pickedCards,
+        "cardPlayed": card
+        })
+    
+    if len(move) == 0:
+        #prendo delle carte    
+        pickedCard.append(card)
+        pickedCard.append(pickedCards)
 
 def getNumber(card):
     return int(card[1:])
-
-def clickCard(card):
-    # SE GIOCO UN 8 
-    print(card.value)
-    card
-
-    if turn:
-        if card in deck:
-            #ho schiacciato una carta del mio mazzo => cancello le eventuali carte
-            #selezionate prima e setto la carta selezionata dal deck
-            cardToPlay = card
-            selectedCards = []
-        else:
-            deckCardNumber = getNumber(cardToPlay)
-            selectedCards.append(card)
-            somma = 0
-
-            for c in selectedCards:
-                somma += getNumber(c)
-
-            if somma == deckCardNumber:
-                #EFFETTUO LA MOSSA
-
-                if utenteConfermaMossa:
-                    #L'UTENTE HA CONFERMATO LA MOSSA E LA GIOCA
-                    pickedCard += selectedCards
-                    msg = None
-                    
-                    for c in selectedCards:
-                        table.remove(c)
-                        #ANIMAZIONE QUI????
-                        #ANIMAZIONE QUI????
-                        #ANIMAZIONE QUI????
-                        #ANIMAZIONE QUI????
-                        #ANIMAZIONE QUI????
-
-                    deck.remove(cardToPlay)
-                    #ANIMAZIONE QUI????
-                    #ANIMAZIONE QUI????
-                    #ANIMAZIONE QUI????
-                    #ANIMAZIONE QUI????
-                    #ANIMAZIONE QUI????
-
-
-                    if "D7" in selectedCards:
-                        msg = Game.user + " ha preso il sette bello!!!"
-                        setteBello = True
-                    elif len(table) == 0:
-                        msg = Game.user + " ha fatto scopa!!!"
-                        nScope += 1
-
-                    inviaJSON({
-                        "request": "move",
-                        "cardPlayed": cardToPlay,
-                        "tableCardsPicked": selectedCards,
-                        "msg": msg
-                    })
-
-                    selectedCards = []
-                    cardToPlay = ""
-                    turn = False
-                else:
-                    #L'UTENTE HA !NON! HA CONFERMATO LA MOSSA E RESETTO TUTTO
-                    selectedCards = []
-                    cardToPlay = ""
-
-            elif somma < deckCardNumber:
-                #FORSE FORSE potrei fare ancora una mossa (NON ASSICURATO)
-                #NON POSSO TERMINARE LA MOSSA E NON POSSO INVIARE LA MOSSA
-                pass
-            else:
-                #LE CARTE SELEZIONATE SONO OLTRE IL NUMERO DELLA CARTA DA GIOCARE
-                #DESELEZIONO LE CARTE DEL TAVOLO
-                
-                selectedCards = []
-                alert("Il numero delle carte selezionate supera quello della carta da giocare")
-
-        #TUTTO IL CODICE STA DENTRO SE E' IL MIO TURNO
 
 def getMoves(card, table):
     possibilities = []

@@ -72,6 +72,7 @@ class Game:
         self.BuildTable(obj['table'])
         self.BuildDrawCard(obj['cards'])
         self.setStatus()
+        client.waitMoveThread = threading.Thread(target=client.waitMove, args=self)
         client.waitMoveThread.start()
 
         client.deck = obj['cards']
@@ -117,49 +118,36 @@ class Game:
         #INGLOVA FUNZIONAMENTO MOSSE / GIOCO DA CLIENT.CLICKCARD
         if client.turn and len(stop) == 0:
             #array table solo con i .value delle card
-            if card.value not in [c.value for c in self.table.cards]:
-                #SE E' UNA CARTA DEL TAVOLO NON DEVO ESEGUIRE IL CALCOLO DELLE COMBINAZIONI
-                possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
-                print(f"{possibleMoves}")
-                """
-                    se si può fare una mossa sola avrò in pickCards tipo
-                    [
-                        [card1, card2] in questa mossa io prendo queste 2 carte
-                    ]
-
-                    se ci sono più mosse possibili io avrò pickCards come
-                    [
-                        [card1, card2],
-                        [card1, card3, card3]
-                    ]
-
-                    qui quindi dovrò chiedere all'utente di scegliere quale tra le mosse possibili vuole Fare
-                    dopo aver scelto la mossa semplicemente chiamo la funzione che esegue la mossa (graficamente)
-
-                    le card sono oggetti!!
-                """
-                if(len(possibleMoves) == 0):
-                    if(card.space == 1):
-                        self.space1.cards.remove(card)
-                        self.space1.calculate()
-                    else:
-                        self.space2.cards.remove(card)
-                        self.space2.calculate()
-                    self.table.addCard(card)
-                    #inviaJSON
-                elif (len(possibleMoves) == 1):
-                    if(card.space == 1):
-                        self.space1.cards.remove(card)
-                        self.space1.calculate()
-                    else:
-                        self.space2.cards.remove(card)
-                        self.space2.calculate()
-                    self.execMove(card, possibleMoves[0])
-                    #inviaJSON
+            possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
+            print(f"{possibleMoves}")
+            
+            if(len(possibleMoves) == 0):
+                #aggiungo la carta al tavolo
+                client.sendMove(card.value)
+                
+                if(card.space == 1):
+                    self.space1.cards.remove(card)
+                    self.space1.calculate()
                 else:
-                    self.chooseMove(card, possibleMoves)
-                    #inviaJSON
-                    pass
+                    self.space2.cards.remove(card)
+                    self.space2.calculate()
+                self.table.addCard(card)
+            elif (len(possibleMoves) == 1):
+                #posso fare SOLO una (1) mossa
+                client.sendMove(card.value, possibleMoves[0])
+
+                if(card.space == 1):
+                    self.space1.cards.remove(card)
+                    self.space1.calculate()
+                else:
+                    self.space2.cards.remove(card)
+                    self.space2.calculate()
+                    
+                self.execMove(card, possibleMoves[0])
+            else:
+                #posso fare 2 o 2+ mosse
+                self.chooseMove(card, possibleMoves)
+                pass
 
             
     def execMove(self, card : Card, pickCard):
@@ -239,20 +227,27 @@ class Game:
 
     def displayPossibleMove(self, possibleMoves): 
         self.clearCardsBackground()
+        
         for i in possibleMoves[abs(self.currentMove) % len(possibleMoves)]:
             i.configure(bg_color=RED)
 
     def confirmMove(self, card, possibleMoves):
+        mossa = possibleMoves[abs(self.currentMove) % len(possibleMoves)]
+
+        client.sendMove(card.value, mossa)
+
         if(card.space == 1):
             self.space1.cards.remove(card)
             self.space1.calculate()
         else:
             self.space2.cards.remove(card)
             self.space2.calculate()
-        self.execMove(card, possibleMoves[abs(self.currentMove) % len(possibleMoves)])
+        self.execMove(card, mossa)
+
         self.btnMove.destroy()
         self.arrowL.destroy()
         self.arrowR.destroy()
+
         self.clearCardsBackground()
 
     def clearCardsBackground(self):
