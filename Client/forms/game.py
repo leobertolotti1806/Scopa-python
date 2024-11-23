@@ -30,16 +30,6 @@ class Game:
             "In attesa di un giocatore.. ",
             "In attesa di un giocatore..."
         ])
-        """ 
-        self.InitGame(
-            {
-                "request": "startGame",
-                "user2" : "ciasky",
-                "startingTurn": True,
-                "table": ["D2", "C3", "D7", "S1"],
-                "cards": ["C1", "B2", "D4"]
-            }
-        ) """
         root.master.protocol("WM_DELETE_WINDOW", lambda: client.chiusura(root.master))
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
@@ -47,7 +37,7 @@ class Game:
         self.animation.waitStop()
         self.msgBox.close()
 
-        self.user2 = obj['user2']
+        self.user2 = obj["user2"]
 
         image = customtkinter.CTkImage(Image.open("media/logoBack.png"), size=(140, 40))
         self.lbl = customtkinter.CTkLabel(
@@ -68,14 +58,17 @@ class Game:
         self.lblstatus2.place(x = R_WIDTH - 30, y = 60, anchor="ne")
 
         #set turno
-        client.turn = obj['startingTurn']
-        self.BuildTable(obj['table'])
-        self.BuildDrawCard(obj['cards'])
+        with client.lock:
+            client.turn = obj["startingTurn"]
+            client.startingTurn = obj["startingTurn"]
+
+        self.BuildTable(obj["table"])
+        self.BuildDrawCard(obj["cards"])
         self.setStatus()
-        client.waitMoveThread = threading.Thread(target=client.waitMove, args=self)
+        client.waitMoveThread = threading.Thread(target=client.waitMove, args=(self,))
         client.waitMoveThread.start()
 
-        client.deck = obj['cards']
+        client.deck = obj["cards"]
             
     def Error(self, msg):
         self.animation.stop = True
@@ -119,11 +112,10 @@ class Game:
         if client.turn and len(stop) == 0:
             #array table solo con i .value delle card
             possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
-            print(f"{possibleMoves}")
             
             if(len(possibleMoves) == 0):
                 #aggiungo la carta al tavolo
-                client.sendMove(card.value)
+                client.sendMove(card.value, [])
                 
                 if(card.space == 1):
                     self.space1.cards.remove(card)
@@ -134,6 +126,7 @@ class Game:
                 self.table.addCard(card)
             elif (len(possibleMoves) == 1):
                 #posso fare SOLO una (1) mossa
+                #prendo la/le carta/carte di possibleMoves[0]
                 client.sendMove(card.value, possibleMoves[0])
 
                 if(card.space == 1):
@@ -147,7 +140,8 @@ class Game:
             else:
                 #posso fare 2 o 2+ mosse
                 self.chooseMove(card, possibleMoves)
-                pass
+
+            self.setStatus()
 
             
     def execMove(self, card : Card, pickCard):
@@ -163,7 +157,6 @@ class Game:
         self.table.removeCards(pickCard)"""
         threading.Thread(target=self.renderMove).start()
         #merge del vettore delle carta più la carta stessa
-        #client.sendMove(card, move)
 
     def renderMove(self):
         for i in self.table.rmCards:
@@ -174,7 +167,7 @@ class Game:
                 ),
                 size=CARDS_TABLE_SIZE
             )
-            #self.table.waitForRemove(card, pickCard)
+        #self.table.waitForRemove(card, pickCard)
         #self.table.waitAnimations()
         #waitAnimations() # aspetto la fine di tutte le animazioni
         stopAnimations.clear() # resetto lo stop
@@ -272,8 +265,3 @@ class Game:
                 "Sta pensando 🤨",
                 "Sta pensando 🤔"
             ])
-            
-
-
-
-    

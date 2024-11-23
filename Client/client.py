@@ -33,39 +33,59 @@ def chiusura(root):
         #PUOI VERIFICARE SE IL CLIENT E' ANCORA CONNESSO AL SERVER
         inviaJSON({"request": "closingClient"})
         print("SONO in una partita e chiudo il client")
-        root.destroy()
+        print('"request": "closingClient"')
+
     else:
         #NON SONO ANCORA IN UNA PARTITA
-        inviaJSON({"request": "stopWaiting"})
-        print("non sono in una partita e chiudo il client")
-        root.destroy()
+        try:
+            inviaJSON({"request": "stopWaiting"})
+            print("non sono in una partita e chiudo il client")
+        except:
+            pass
+        print('"request": "stopWaiting"')
+    root.destroy()
 
-#Host = "172.27.128.1" MAXWELL PC LEO
-#Host = "192.168.178.24" PC LEO CASA
 Host = "192.168.178.24"
 Host = socket.gethostbyname(socket.gethostname())
 Porta = 9999
 Indirizzo = (Host, Porta)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+waitMoveThread = threading.Thread()
+data = {}
+turn = False
+startingTurn = False
+#variabili per i punteggi
+pickedCard = []
+nScope = 0
+setteBello = False
+nDenari = 0
+nScopeAvversario = 0
+
 def waitForGame(nickname, resolver, error):
     threading.Thread(target=connect, args=(nickname, resolver, error)).start()
 
 def connect(nickname, resolver, error):
+    canIPlay = True
     try:
         # Prova a connettersi al server
         client.connect(Indirizzo)
+    except:
+        # Gestisce errori di connessione
+        canIPlay = False
+        client.close()
+        error(f'Mi spiace ma è impossibile collegarsi al Server!!')
+    
+    if canIPlay:
+        #il server non è avviato
         inviaJSON({"nome": nickname})
         resolver(riceviJson())
-    except socket.error as e:
-        # Gestisce errori di connessione
-        client.close()
-        error(f'Impossibile Collegarsi al Server\n\n({e})')
-
 
 lock = threading.Lock()
 
 def calculateAndSendPoints():
+    global nDenari
+
     #controllo numero carte
     if len(pickedCard) > 20:
         carte = True
@@ -73,12 +93,6 @@ def calculateAndSendPoints():
         carte = False
     else:
         carte = "pari"
-
-    #controllo dei denari
-    nDenari = 0
-    for c in pickedCard:
-        if c.startswith("D"):
-            d += 1
 
     if nDenari > 5:
         denari = True
@@ -95,122 +109,101 @@ def calculateAndSendPoints():
 
 def waitMove(game):
     global data
+    global nScopeAvversario
+    global turn
+    global startingTurn
     endThread = False
 
     inviaJSON({"request": "startGameOk"})
 
     while not endThread:
-        with lock:
-            data = riceviJson()
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
-        #CONTROLLA M0STRA MSG AVVERSARIO SCOPA / SETTE BELLO IN RICEVIJSON
 
+        data = riceviJson()
+        print(f"[{game.user}]: data = {data}")
 
+        if data != None:
+            if data["request"] == "move":
+                with lock:
+                    turn = True
+                #renderizzo mossa
+                game.setStatus()
 
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-        #CONTROLLA SCOPE AVVERSARIO (GESTISCILO IN request == move) con scopeAvversario += 1
-            turn = True
+                if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
+                    pass
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                
+                tableCardsPicked = [c for c in game.table.cards if c.value in data["tableCardsPicked"]] # carte prese dall' avversario
 
-            if data != None:
-                match data["request"]:
-                    case "move":
-                        #renderizzo mossa
+                if len(game.table.cards) - len(tableCardsPicked):
+                    nScopeAvversario += 1
 
-                        if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
-                            alert(f"{game.user2} ha preso sette bello!!!")
+                game.space2.cards[0].value = data["cardPlayed"]
+                
+                game.execMove(
+                    game.space2.cards[0], # carta giocata dall'avversario
+                    tableCardsPicked
+                )                                
+                #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
+                #ANIMAZIONE QUI??
                         
-                        tableCardsPicked = [c for c in game.table.cards if c.value in data["tableCardsPicked"]] # carte prese dall' avversario
+                """ showPickCards(cardGiocata, cardDaPrendereDalTavolo)
+                cardGiocata è data["cardPlayed"]
+                cardDaPrendereDalTavolo è data["tableCardsPicked"] """
 
-                        if len(game.table.cards) - len(tableCardsPicked):
-                            nScopeAvversario += 1
+            elif data["request"] == "newCards":
+                with lock:
+                    turn = startingTurn
+                #renderizzo mossa
+                game.setStatus()
 
-                        game.space2.cards[0].value = data["cardPlayed"]
-                        
-                        game.execMove(
-                            game.space2.cards[0], # carta giocata dall'avversario
-                            tableCardsPicked
-                        )                                
-                        #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
-                        #ANIMAZIONE QUI??
-                                
-                        """ showPickCards(cardGiocata, cardDaPrendereDalTavolo)
-                        cardGiocata è data["cardPlayed"]
-                        cardDaPrendereDalTavolo è data["tableCardsPicked"] """
-                        break
+                if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
+                    pass
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                    #alert(f"{game.user2} ha preso sette bello!!!")
+                
+                tableCardsPicked = [c for c in game.table.cards if c.value in data["tableCardsPicked"]] # carte prese dall' avversario
 
-                    case "newCards":
-                        #IL SERVER DISTRIBUISCE LE CARTE
-                        if data["msg"] != None:
-                            pass
-                            #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
-                            #ANIMAZIONE QUI??
-                            #ANIMAZIONE QUI??
+                if len(game.table.cards) - len(tableCardsPicked):
+                    nScopeAvversario += 1
 
-                        cards = data["cards"]
-                        #Game.BuildDrawCard(cards)
-                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                        #QUI LE CARTE VENGONO CREATE ANCHE PER L'AVVERSARIO????
-                        break
-                    case "calculatePoints":
-                        endThread = True
-                        
-                        calculateAndSendPoints()
-                        
-                        #showPoints()
-                        #showPoints()
-                        #showPoints()
-                        #showPoints()
-                        #showPoints()
-                        break
-                    case "endGameError":
-                        endThread = True
-                        inviaJSON({"request": "confirmedForceQuit"})
-                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-                        #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
-            else:
+                game.space2.cards[0].value = data["cardPlayed"]
+                
+                game.execMove(
+                    game.space2.cards[0], # carta giocata dall'avversario
+                    tableCardsPicked
+                )                                
+
+            elif data["request"] == "calculatePoints":
                 endThread = True
+                calculateAndSendPoints()
+                
+                #showPoints()
+                #showPoints()
+                #showPoints()
+                #showPoints()
+                #showPoints()
+            elif data["request"] == "endGameError":
+                endThread = True
+                inviaJSON({"request": "confirmedForceQuit"})
+                #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+                #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
+        else:
+            endThread = True
 
-waitMoveThread = None
-data = {}
-turn = False
-#variabili per i punteggi
-pickedCard = []
-nScope = 0
-setteBello = False
-nScopeAvversario = 0
-
-def sendMove(card, move = []):
+def sendMove(card, move):
+    global nDenari
+    global turn
 
     pickedCards = [c.value for c in move]
 
@@ -219,11 +212,20 @@ def sendMove(card, move = []):
         "tableCardsPicked" : pickedCards,
         "cardPlayed": card
         })
-    
+
+    with lock:
+        turn = False
+
     if len(move) == 0:
-        #prendo delle carte    
+        #prendo delle carte
         pickedCard.append(card)
         pickedCard.append(pickedCards)
+
+    for c in pickedCard:
+        if c.startswith("D"):
+            nDenari += 1
+    if card.startswith("D"):
+        nDenari += 1
 
 def getNumber(card):
     return int(card[1:])
@@ -239,7 +241,7 @@ def getMoves(card, table):
 
         if n == numCarta:
             possibilities.append([c])
-            
+
         somma += n
 
     if len(possibilities) == 0:
@@ -249,7 +251,6 @@ def getMoves(card, table):
         else:
             #NON HO CARTE DELLO STESSO VALORE SUL TAVOLO E CONTINUO A CERCARE COMBINAZIONI
 
-            
             #tableCard = copia del table ma solo con i .value così
             for i in range(2, len(table)):
                 #non si deve copiare l'intero oggetto grafico

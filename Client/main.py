@@ -25,4 +25,4 @@ print(R_WIDTH, R_HEIGHT, end="\n")
 # il gioco parte dal login
 Login(frame)
 
-root.mainloop() 
+root.mainloop()

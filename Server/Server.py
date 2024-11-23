@@ -139,6 +139,12 @@ def partita(client1, client2, check1, check2, mazzo):
         "user2": client1["nome"]
         }, client2["client"])
 
+    game = {
+        "nMosse": 0,
+        "err": False,
+        "mazzo": mazzo
+    }
+
     #Aspetto che i due client mi confermino di avviare la partita
     check1.join()
     check2.join()
@@ -146,12 +152,6 @@ def partita(client1, client2, check1, check2, mazzo):
     with lock:
         checkClientsThreadList.remove(check1)
         checkClientsThreadList.remove(check2)
-
-    game = {
-        "nMosse": 0,
-        "err": False,
-        "mazzo": mazzo
-    }
 
     print(f"[partita di {client1['nome']} - {client2['nome']}]: Avviata")
 
@@ -194,28 +194,13 @@ def mosse(client, cAvversario, game):
         mossa = riceviJSON(client["client"])
         print(f"[{client['nome']}]: Mossa ricevuta: {mossa}")
 
-        if mossa["request"] == "closingClient":
-            with lock:
-                game["err"] = True
-            
-            print(f"[{client['nome']}]: ho chiuso la finestra")
-
-            inviaJSON({"request": "endGameError"}, cAvversario["client"])
-            
-        elif mossa["request"] == "confirmedForceQuit":
-            with lock:
-                game["err"] = True
-
-            print(f"[{client['nome']}]: Il client avversario [{cAvversario['nome']}] ha terminato la partita e confermo l'uscita")
-        else:
-            # Invia la mossa all"altro giocatore
-            if len(mossa["tableCardsPicked"]) > 0:
-                inviaJSON({
-                    "request": "move",
-                    "cardPlayed": mossa["cards"], #CARD GIOCATA
-                    "tableCardsPicked" : mossa["tableCardsPicked"], #CARDS O CARD PRESA DAL TAVOLO,
-                    "msg": mossa["msg"] #variabile per far vedere lato client se l"avversario ha fatto scopa/settebello
-                    }, cAvversario["client"])
+        if mossa["request"] == "move":
+                 # Invia la mossa all"altro giocatore
+            inviaJSON({
+                "request": "move",
+                "cardPlayed": mossa["cardPlayed"], #CARD GIOCATA
+                "tableCardsPicked" : mossa["tableCardsPicked"] #CARDS O CARD PRESA DAL TAVOLO,
+                }, cAvversario["client"])
 
             with lock:
                 game["nMosse"] += 1
@@ -224,8 +209,20 @@ def mosse(client, cAvversario, game):
             if game["nMosse"] % 6 == 0:
                 inviaJSON({
                     "request": "newCards",
-                    "cards": pesca(game["mazzo"], 3),
-                    "msg": mossa["msg"] #variabile per far vedere lato client se l"avversario ha fatto scopa/settebello
-                    }, client["client"])
+                    "cards": pesca(game["mazzo"], 3)
+                    }, [client["client"], cAvversario["client"]])
+        elif mossa["request"] == "closingClient":
+            with lock:
+                game["err"] = True
+            
+            print(f"[{client['nome']}]: ho chiuso la finestra")
+
+            inviaJSON({"request": "endGameError"}, cAvversario["client"])
+
+        elif mossa["request"] == "confirmedForceQuit":
+            with lock:
+                game["err"] = True
+
+            print(f"[{client['nome']}]: Il client avversario [{cAvversario['nome']}] ha terminato la partita e confermo l'uscita")
 
 avviaServer()
