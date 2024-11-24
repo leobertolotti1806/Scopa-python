@@ -131,7 +131,7 @@ def waitMove(game):
                 with lock:
                     turn = True
                 
-                #renderizzo mossa
+                #renderizzo turno
                 game.setStatus()
 
                 if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
@@ -149,6 +149,9 @@ def waitMove(game):
 
                 game.space2.cards[0].value = data["cardPlayed"]
                 
+                game.space2.cards.pop(0)
+                game.space2.calculate()
+
                 game.execMove(
                     game.space2.cards[0], # carta giocata dall'avversario
                     tableCardsPicked
