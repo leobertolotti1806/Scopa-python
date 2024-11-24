@@ -45,6 +45,15 @@ class AnimationText:
             except:
                 self.finish = [True]
                 return
+        else:
+            #HO FATTO COME MI DICEVI NEL VIDEO
+            #guarda commento riga 165 circa client.py e dimmi se
+            #va bene oppure no
+            try:
+                self.lbl.configure(text="")
+            except:
+                self.finish = [True]
+                return
         self.index += 1
         if(self.index == len(self.frames)):
             self.index = 0

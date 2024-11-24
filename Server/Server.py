@@ -196,11 +196,12 @@ def mosse(client, cAvversario, game):
 
         if mossa["request"] == "move":
                  # Invia la mossa all"altro giocatore
-            inviaJSON({
-                "request": "move",
-                "cardPlayed": mossa["cardPlayed"], #CARD GIOCATA
-                "tableCardsPicked" : mossa["tableCardsPicked"] #CARDS O CARD PRESA DAL TAVOLO,
-                }, cAvversario["client"])
+            obj = mossa
+                    
+            if game["nMosse"] == 29:
+                obj["lastPlay"] = True
+
+            inviaJSON(obj, cAvversario["client"])
 
             with lock:
                 game["nMosse"] += 1
@@ -209,7 +210,7 @@ def mosse(client, cAvversario, game):
             if game["nMosse"] % 6 == 0:
                 inviaJSON({
                     "request": "newCards",
-                    "cards": pesca(game["mazzo"], 3)
+                    "cards": pesca(game["mazzo"], 3),
                     }, [client["client"], cAvversario["client"]])
         elif mossa["request"] == "closingClient":
             with lock:

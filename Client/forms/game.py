@@ -141,6 +141,14 @@ class Game:
                 #posso fare 2 o 2+ mosse
                 self.chooseMove(card, possibleMoves)
 
+            if not client.lastPlay and len(self.table.cards) == 0:
+                #se è l'ultima mossa e NON E' L'ULTIMA MOSSA
+                #aggiungo un punto
+                client.nScope += 1
+
+            with client.lock:
+                client.turn = False
+
             self.setStatus()
 
             
@@ -249,6 +257,7 @@ class Game:
 
     
     def setStatus(self):
+        print(f"[{self.user}]: client.turn: {client.turn}")
         if(self.animation.thread.is_alive()):
             self.animation.waitStop()
         if(client.turn):

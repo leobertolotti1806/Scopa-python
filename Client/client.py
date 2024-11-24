@@ -19,7 +19,7 @@ def parseObject(stringa):
     except (json.JSONDecodeError, TypeError) as e:
         print(f"Errore nella conversione della stringa in oggetto: {e}")
         return None
-
+    
 def riceviJson(qta = 1024):
     return parseObject(client.recv(qta).decode("utf-8"))
 
@@ -56,11 +56,13 @@ data = {}
 turn = False
 startingTurn = False
 #variabili per i punteggi
-pickedCard = []
+pickedCards = []
 nScope = 0
 setteBello = False
 nDenari = 0
+puntiTotali = 0
 nScopeAvversario = 0
+lastPlay = False
 
 def waitForGame(nickname, resolver, error):
     threading.Thread(target=connect, args=(nickname, resolver, error)).start()
@@ -83,24 +85,26 @@ def connect(nickname, resolver, error):
 
 lock = threading.Lock()
 
-def calculateAndSendPoints():
+def calculatePoints():
     global nDenari
+    global puntiTotali
+    card = "pari"
+    denari = "pari"
 
     #controllo numero carte
-    if len(pickedCard) > 20:
+    if len(pickedCards) > 20:
+        puntiTotali += 1
         carte = True
-    elif len(pickedCard) < 20:
+    elif len(pickedCards) < 20:
         carte = False
-    else:
-        carte = "pari"
 
     if nDenari > 5:
+        puntiTotali += 1
         denari = True
     elif nDenari < 5:
         denari = False
-    else:
-        denari = "pari"
 
+    puntiTotali += nScope
     #FAI CONTROLLO VITTORIA
     #FAI CONTROLLO VITTORIA
     #FAI CONTROLLO VITTORIA
@@ -112,6 +116,7 @@ def waitMove(game):
     global nScopeAvversario
     global turn
     global startingTurn
+    global lastPlay
     endThread = False
 
     inviaJSON({"request": "startGameOk"})
@@ -125,6 +130,7 @@ def waitMove(game):
             if data["request"] == "move":
                 with lock:
                     turn = True
+                
                 #renderizzo mossa
                 game.setStatus()
 
@@ -146,7 +152,10 @@ def waitMove(game):
                 game.execMove(
                     game.space2.cards[0], # carta giocata dall'avversario
                     tableCardsPicked
-                )                                
+                )
+
+                if "lastPlay" in data:
+                    lastRound = True
                 #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
                 #ANIMAZIONE QUI??
                         
@@ -155,34 +164,29 @@ def waitMove(game):
                 cardDaPrendereDalTavolo è data["tableCardsPicked"] """
 
             elif data["request"] == "newCards":
+                #dobbiamo fare qualche WAIT ANIMATION PER ASPETTARE
+                # la RENDERIZZAZIONE di TUTTA LA MOSSA E POI dopo DISTRIBUISCO LE
+                #NUOVE CARTE?
+                #NUOVE CARTE???
+                #NUOVE CARTE???
+                #NUOVE CARTE???
+                #NUOVE CARTE???
+                #NUOVE CARTE???
+                #NUOVE CARTE???
+                #NUOVE CARTE???
+                #NUOVE CARTE???
+
+                game.BuildDrawCard(data["cards"])
+
                 with lock:
                     turn = startingTurn
+
                 #renderizzo mossa
                 game.setStatus()
 
-                if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
-                    pass
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                
-                tableCardsPicked = [c for c in game.table.cards if c.value in data["tableCardsPicked"]] # carte prese dall' avversario
-
-                if len(game.table.cards) - len(tableCardsPicked):
-                    nScopeAvversario += 1
-
-                game.space2.cards[0].value = data["cardPlayed"]
-                
-                game.execMove(
-                    game.space2.cards[0], # carta giocata dall'avversario
-                    tableCardsPicked
-                )                                
-
             elif data["request"] == "calculatePoints":
                 endThread = True
-                calculateAndSendPoints()
+                calculatePoints()
                 
                 #showPoints()
                 #showPoints()
@@ -205,27 +209,25 @@ def sendMove(card, move):
     global nDenari
     global turn
 
-    pickedCards = [c.value for c in move]
+    tableCardsPicked = [c.value for c in move]
 
     inviaJSON({
         "request": "move",
-        "tableCardsPicked" : pickedCards,
+        "tableCardsPicked" : tableCardsPicked,
         "cardPlayed": card
         })
 
-    with lock:
-        turn = False
+    if len(move) != 0:
+        pickedCards.append(card)
 
-    if len(move) == 0:
-        #prendo delle carte
-        pickedCard.append(card)
-        pickedCard.append(pickedCards)
+        for c in tableCardsPicked:
+            pickedCards.append(c)
 
-    for c in pickedCard:
-        if c.startswith("D"):
+            if c[0] == "D":
+                nDenari += 1
+
+        if card[0] == "D":
             nDenari += 1
-    if card.startswith("D"):
-        nDenari += 1
 
 def getNumber(card):
     return int(card[1:])
