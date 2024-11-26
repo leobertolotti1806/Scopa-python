@@ -121,13 +121,20 @@ def avviaServer():
         
 # Metodo per Gestire i Messaggi in Arrivo dal CLIENT
 def partita(client1, client2, check1, check2, mazzo):
-    tavolo = pesca(mazzo, 4)
+    game = {
+        "nMosse": 0,
+        "err": False,
+        "mazzo": mazzo,
+        "lock": threading.Lock()
+    }
+
+    tavolo = pesca(game, 4)
 
     inviaJSON({
         "request": "startGame",
         "startingTurn": True,
         "table": tavolo,
-        "cards": pesca(mazzo, 3),
+        "cards": pesca(game, 3),
         "user2": client2["nome"]
         }, client1["client"])
 
@@ -135,16 +142,9 @@ def partita(client1, client2, check1, check2, mazzo):
         "request": "startGame",
         "startingTurn": False,
         "table": tavolo,
-        "cards": pesca(mazzo, 3),
+        "cards": pesca(game, 3),
         "user2": client1["nome"]
         }, client2["client"])
-
-    game = {
-        "nMosse": 0,
-        "err": False,
-        "mazzo": mazzo,
-        "lock": threading.Lock()
-    }
 
     #Aspetto che i due client mi confermino di avviare la partita
     check1.join()
@@ -180,12 +180,12 @@ def partita(client1, client2, check1, check2, mazzo):
 
     print(f"[partita di {client1['nome']} - {client2['nome']}]: Client rimossi con successo e termino la partita")
 
-def pesca(mazzo, nCarte):
-    carteScelte = random.sample(mazzo, nCarte)
+def pesca(game, nCarte):
+    carteScelte = random.sample(game["mazzo"], nCarte)
 
-    with lock:
+    with game["lock"]:
         for carta in carteScelte:
-            mazzo.remove(carta)
+            game["mazzo"].remove(carta)
 
     return carteScelte
 
@@ -206,18 +206,15 @@ def mosse(client, cAvversario, game):
 
             with game["lock"]:
                 game["nMosse"] += 1
-                for c in mossa["tableCardsPicked"]:
-                    game["mazzo"].remove(c)
-
-                game["mazzo"].remove(mossa["cardPlayed"])
-
 
             # Ogni 6 mosse termina il round
             if game["nMosse"] % 6 == 0:
-                inviaJSON({
-                    "request": "newCards",
-                    "cards": pesca(game["mazzo"], 3),
-                    }, [client["client"], cAvversario["client"]])
+                for cli in [client["client"], cAvversario["client"]]:
+                    inviaJSON({
+                        "request": "newCards",
+                        "cards": pesca(game, 3),
+                    }, cli)
+
         elif mossa["request"] == "closingClient":
             with game["lock"]:
                 game["err"] = True
