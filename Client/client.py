@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 from itertools import permutations
+from card import *
 
 # DA OGGETTO A STRINGA
 def stringifyObject(obj):
@@ -75,7 +76,6 @@ def connect(nickname, resolver, error):
     except:
         # Gestisce errori di connessione
         canIPlay = False
-        client.close()
         error(f'Mi spiace ma è impossibile collegarsi al Server!!')
     
     if canIPlay:
@@ -160,7 +160,7 @@ def waitMove(game):
                     )
                 
                 if "lastPlay" in data:
-                    lastRound = True
+                    lastPlay = True
                 #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
                 #ANIMAZIONE QUI??
                         
@@ -181,6 +181,8 @@ def waitMove(game):
                 #NUOVE CARTE???
                 #NUOVE CARTE???
 
+                stopAnimations.clear()
+                stopAnimations.wait()
                 game.BuildDrawCard(data["cards"])
 
                 with lock:

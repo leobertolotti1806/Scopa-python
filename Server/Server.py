@@ -142,7 +142,8 @@ def partita(client1, client2, check1, check2, mazzo):
     game = {
         "nMosse": 0,
         "err": False,
-        "mazzo": mazzo
+        "mazzo": mazzo,
+        "lock": threading.Lock()
     }
 
     #Aspetto che i due client mi confermino di avviare la partita
@@ -203,8 +204,13 @@ def mosse(client, cAvversario, game):
 
             inviaJSON(obj, cAvversario["client"])
 
-            with lock:
+            with game["lock"]:
                 game["nMosse"] += 1
+                for c in mossa["tableCardsPicked"]:
+                    game["mazzo"].remove(c)
+
+                game["mazzo"].remove(mossa["cardPlayed"])
+
 
             # Ogni 6 mosse termina il round
             if game["nMosse"] % 6 == 0:
@@ -213,7 +219,7 @@ def mosse(client, cAvversario, game):
                     "cards": pesca(game["mazzo"], 3),
                     }, [client["client"], cAvversario["client"]])
         elif mossa["request"] == "closingClient":
-            with lock:
+            with game["lock"]:
                 game["err"] = True
             
             print(f"[{client['nome']}]: ho chiuso la finestra")
@@ -221,7 +227,7 @@ def mosse(client, cAvversario, game):
             inviaJSON({"request": "endGameError"}, cAvversario["client"])
 
         elif mossa["request"] == "confirmedForceQuit":
-            with lock:
+            with game["lock"]:
                 game["err"] = True
 
             print(f"[{client['nome']}]: Il client avversario [{cAvversario['nome']}] ha terminato la partita e confermo l'uscita")
