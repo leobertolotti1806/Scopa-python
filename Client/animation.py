@@ -6,6 +6,7 @@ class Rect:
 
     m = None
     q = None
+    imp = False
 
     def __init__(self, p1, p2):
         self.error = False
@@ -14,8 +15,12 @@ class Rect:
     def getMQ(self, p1, p2):
         self.error = False
         if(p1[0] - p2[0] != 0):
-            self.m = (p1[1] - p2[1]) / (p1[0] - p2[0])
-            self.q = p1[1] - (self.m * p1[0])
+            eq = (p1[0] - p2[0])
+            if eq != 0:
+                self.m = (p1[1] - p2[1]) / eq
+                self.q = p1[1] - (self.m * p1[0])
+            else:
+                self.imp = True
         else :
             self.error = True
 

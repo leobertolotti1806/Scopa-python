@@ -111,6 +111,7 @@ class Game:
         #INGLOVA FUNZIONAMENTO MOSSE / GIOCO DA CLIENT.CLICKCARD
         if client.turn and len(stop) == 0:
             #array table solo con i .value delle card
+            print(f"[{self.user}]: card di click card è : {card}")
             possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
             
             if(len(possibleMoves) == 0):

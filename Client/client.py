@@ -148,15 +148,17 @@ def waitMove(game):
                     nScopeAvversario += 1
 
                 game.space2.cards[0].value = data["cardPlayed"]
-                
-                game.space2.cards.pop(0)
+                removedCard = game.space2.cards.pop(0)
                 game.space2.calculate()
-
-                game.execMove(
-                    game.space2.cards[0], # carta giocata dall'avversario
-                    tableCardsPicked
-                )
-
+                
+                if len(tableCardsPicked) == 0:
+                    game.table.addCard(removedCard) 
+                else:
+                    game.execMove(
+                        removedCard, # carta giocata dall'avversario
+                        tableCardsPicked
+                    )
+                
                 if "lastPlay" in data:
                     lastRound = True
                 #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO

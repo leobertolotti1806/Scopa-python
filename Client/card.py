@@ -94,14 +94,22 @@ class Card(CTkLabel):
             while x != self.pos[0]:
                 #print(x)
                 index += 1
-                if(self.pos[0] < x):
-                    x -= 0.25
-                    x = round(x, 2)
+                if(not rect.imp):
+                    if(self.pos[0] < x):
+                        x -= 0.25
+                        x = round(x, 2)
+                    else:
+                        x += 0.25
+                        x = round(x, 2)
+                    y = rect.getY(x)
                 else:
-                    x += 0.25
-                    x = round(x, 2)
+                    if(self.pos[1] < y):
+                        y -= 0.25
+                        y = round(x, 2)
+                    else:
+                        y += 0.25
+                        y = round(x, 2)
 
-                y = rect.getY(x)
                 self.place(x=x, y=y, anchor="center")
                 self._update_image()
                 if(index == 2):
