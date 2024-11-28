@@ -158,6 +158,7 @@ class Game:
         pickCard.append(card)
         self.table.cards.append(card)
         self.table.rmCards = pickCard
+        print(f"{Back.RED} {Fore.BLACK} Carte da rimuovere: {self.table.rmCards} {Back.BLACK} {Fore.WHITE}")
 
         """for i in self.table.rmCards:
             i.waitStop = True
@@ -184,6 +185,7 @@ class Game:
         self.table.removeCards()
         stopAnimations.clear()
         stopAnimations.wait()
+        self.table.destroyPickedCards()
     
     def chooseMove(self, card, possibleMoves):
         #creare bottoni

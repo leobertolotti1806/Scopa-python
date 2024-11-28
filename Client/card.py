@@ -30,6 +30,8 @@ class Card(CTkLabel):
         self.img = image
         self.size = size
         self.space = space
+        self.stopCard = False
+        self.closedCard = threading.Event()
         self.eventAnimation = threading.Event()
 
         self.waitBeforeAnimation = 0
@@ -41,8 +43,8 @@ class Card(CTkLabel):
 
     def waitAnimation(self):
         while True:
-            x = self.pos[0]
-            y = self.pos[1]
+            x = round(self.pos[0])
+            y = round(self.pos[1])
             sizeX = self.size[0]
             value = self.value
             print(Back.WHITE + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " sono pronto a partire" + Back.BLACK + Fore.WHITE, end="\n")
@@ -52,6 +54,9 @@ class Card(CTkLabel):
                 # e poi breakka il ciclo
                 #self.stopper()
             self.eventAnimation.wait()
+            if(self.stopCard):
+                self.closedCard.set()
+                break
 
             print(Back.LIGHTBLACK_EX + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " animazione verso" + Fore.GREEN + f" {x};{y}" + Fore.WHITE +" partita" + Back.BLACK + Fore.WHITE, end="\n")
 
@@ -91,29 +96,27 @@ class Card(CTkLabel):
         print(Back.CYAN + Fore.BLUE + f"{self.value}:" + Fore.WHITE + f" ha iniziato a percorrere la retta:" + Fore.GREEN + f" y = {rect.m}x + {rect.q}" + Fore.WHITE + Back.BLACK, end="\n")
         if(not rect.error):
             index = 0
-            while x != self.pos[0]:
+            posX = round(self.pos[0])
+            posY = round(self.pos[1])
+            while x != posX:
                 #print(x)
                 index += 1
                 if(not rect.imp):
-                    if(self.pos[0] < x):
-                        x -= 0.25
-                        x = round(x, 2)
+                    if(posX < x):
+                        x -= 1
                     else:
-                        x += 0.25
-                        x = round(x, 2)
+                        x += 1
                     y = rect.getY(x)
                 else:
-                    if(self.pos[1] < y):
-                        y -= 0.25
-                        y = round(x, 2)
+                    if(posY < y):
+                        y -= 1
                     else:
-                        y += 0.25
-                        y = round(x, 2)
+                        y += 1
 
                 self.place(x=x, y=y, anchor="center")
-                self._update_image()
+                #self._update_image()
                 if(index == 2):
-                    time.sleep(0.0000005)
+                    time.sleep(0.0025)
                     index = 0
 
     def move(self, p2, timeW = 0, size = "NaN", newValue=""):
@@ -131,6 +134,12 @@ class Card(CTkLabel):
         if(len(stop) == 0):
             print(Back.WHITE + Fore.BLUE + f"{self.value}:" + Back.BLACK + Fore.GREEN + " mando la fine stop" + Fore.WHITE)
             stopAnimations.set()
+
+    def destroyCard(self):
+        self.stopCard = True
+        self.eventAnimation.set()
+        self.closedCard.wait()
+        self.destroy()
 
 class HandSpace:
 
@@ -264,13 +273,18 @@ class TableSpace:
                         self.y
                     )
                 )
-        self.rmCards = []
         self.calculate()
 
     def indexRm(self, card):
         for i in range(len(self.cards)):
             if(self.cards[i].value == card.value):
                 return self.cards.pop(i)
+            
+    def destroyPickedCards(self):
+        if(len(stop) == 0):
+            for i in self.rmCards:
+                if(i):
+                    i.destroyCard()
         
 
             
