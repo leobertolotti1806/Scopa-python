@@ -117,6 +117,7 @@ def waitMove(game):
     global turn
     global startingTurn
     global lastPlay
+    global setteBello
     endThread = False
 
     inviaJSON({"request": "startGameOk"})
@@ -133,14 +134,6 @@ def waitMove(game):
                 
                 #renderizzo turno
                 game.setStatus()
-
-                if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
-                    pass
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
-                    #alert(f"{game.user2} ha preso sette bello!!!")
                 
                 tableCardsPicked = [c for c in game.table.cards if c.value in data["tableCardsPicked"]] # carte prese dall' avversario
 
@@ -158,31 +151,19 @@ def waitMove(game):
                         removedCard, # carta giocata dall'avversario
                         tableCardsPicked
                     )
-                
+
+                if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
+                    setteBello = True
+
                 if "lastPlay" in data:
                     lastPlay = True
-                #L'AVVERSARIO HA FATTO SCOPA O HA PRESO SETTE BELLO
-                #ANIMAZIONE QUI??
-                        
-                """ showPickCards(cardGiocata, cardDaPrendereDalTavolo)
-                cardGiocata è data["cardPlayed"]
-                cardDaPrendereDalTavolo è data["tableCardsPicked"] """
-
+                      
             elif data["request"] == "newCards":
-                #dobbiamo fare qualche WAIT ANIMATION PER ASPETTARE
-                # la RENDERIZZAZIONE di TUTTA LA MOSSA E POI dopo DISTRIBUISCO LE
-                #NUOVE CARTE?
-                #NUOVE CARTE???
-                #NUOVE CARTE???
-                #NUOVE CARTE???
-                #NUOVE CARTE???
-                #NUOVE CARTE???
-                #NUOVE CARTE???
-                #NUOVE CARTE???
-                #NUOVE CARTE???
-
                 stopAnimations.clear()
-                stopAnimations.wait()
+
+                if len(stop) != 0:
+                    stopAnimations.wait()
+
                 game.BuildDrawCard(data["cards"])
 
                 with lock:
@@ -201,8 +182,50 @@ def waitMove(game):
                 #showPoints()
                 #showPoints()
             elif data["request"] == "endGameError":
+                turn = False#rendo le carte NON cliccabili
                 endThread = True
                 inviaJSON({"request": "confirmedForceQuit"})
+
+                stopAnimations.clear()
+                if len(stop) != 0:
+                    stopAnimations.wait()
+                msgBox = MessageBox(
+                    root=game.frame, 
+                    msg="L'avversario è uscito dal gioco",
+                    color=RED, 
+                    btn = {    
+                        "text": "Torna alla home",
+                        "fg_color": RED,
+                        "text_color": WHITE,
+                        "command": 
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        """ lambda: print("BTN TORNA HOME")
+                        lambda: game.frame.destroy()
+                        lambda: vadoAlLogin() """
+                        
+                        })
+
+                msgBox.show()
                 #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
                 #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
                 #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO

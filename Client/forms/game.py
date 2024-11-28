@@ -24,6 +24,7 @@ class Game:
         self.frame.grid_columnconfigure(1, weight=1) """
         
         self.msgBox = MessageBox(root=self.frame)
+        self.msgBox.show()
         client.waitForGame(self.user, self.InitGame, self.Error)
         self.animation = animation.AnimationText(self.root, self.msgBox.lbl, 300, [
             "In attesa di un giocatore.  ",
@@ -36,7 +37,6 @@ class Game:
     def InitGame(self, obj):
         self.animation.waitStop()
         self.msgBox.close()
-
         self.user2 = obj["user2"]
 
         image = customtkinter.CTkImage(Image.open("media/logoBack.png"), size=(140, 40))
@@ -45,6 +45,7 @@ class Game:
             image=image,
             text=""
         )
+
         self.lbl.place(x=centerX(), y=LOGO_Y, anchor="center")
 
         self.lbluser1 = customtkinter.CTkLabel(master=self.frame, text=self.user, text_color=WHITE, font=default_font_subtitle())
@@ -73,6 +74,7 @@ class Game:
     def Error(self, msg):
         self.animation.stop = True
         self.msgBox.error(msg)
+        self.msgBox.show()
 
     def BuildDrawCard(self, card):
         self.space1 = HandSpace(
@@ -116,8 +118,6 @@ class Game:
             
             if(len(possibleMoves) == 0):
                 #aggiungo la carta al tavolo
-                client.sendMove(card.value, [])
-                
                 if(card.space == 1):
                     self.space1.cards.remove(card)
                     self.space1.calculate()
@@ -125,10 +125,12 @@ class Game:
                     self.space2.cards.remove(card)
                     self.space2.calculate()
                 self.table.addCard(card)
+
+                client.sendMove(card.value, [])
+
             elif (len(possibleMoves) == 1):
                 #posso fare SOLO una (1) mossa
                 #prendo la/le carta/carte di possibleMoves[0]
-                client.sendMove(card.value, possibleMoves[0])
 
                 if(card.space == 1):
                     self.space1.cards.remove(card)
@@ -137,6 +139,7 @@ class Game:
                     self.space2.cards.remove(card)
                     self.space2.calculate()
                     
+                client.sendMove(card.value, possibleMoves[0])
                 self.execMove(card, possibleMoves[0])
             else:
                 #posso fare 2 o 2+ mosse
@@ -165,10 +168,10 @@ class Game:
         self.table.cards.append(card)
         pickCard.append(card)
         self.table.removeCards(pickCard)"""
-        threading.Thread(target=self.renderMove).start()
+        threading.Thread(target=self.renderMove, args=(card.value,)).start()
         #merge del vettore delle carta più la carta stessa
 
-    def renderMove(self):
+    def renderMove(self, card):
         for i in self.table.rmCards:
             i.move(
                 (
@@ -185,6 +188,24 @@ class Game:
         self.table.removeCards()
         stopAnimations.clear()
         stopAnimations.wait()
+        #ANIMAZIONE
+        if "D7" in self.table.rmCards and len(self.table.cards) == 0:
+            #scopa con settebello
+            MessageBox(self.frame,
+                       "Scopa con sette bello!!!",
+                       DARK_GREEN, default_font_subtitle()).show(1.5)
+        elif len(self.table.cards) == 0:
+            #scopa
+            MessageBox(self.frame,
+                       "Hai fatto scopa!!!",
+                       DARK_GREEN, default_font_subtitle()).show(1.5)
+            
+        elif "D7" in self.table.rmCards:
+            #setteBello
+            MessageBox(self.frame,
+                       "Hai preso sette bello!!!",
+                       DARK_GREEN, default_font_subtitle()).show(1.5)
+
         self.table.destroyPickedCards()
     
     def chooseMove(self, card, possibleMoves):
@@ -238,7 +259,6 @@ class Game:
     def confirmMove(self, card, possibleMoves):
         mossa = possibleMoves[abs(self.currentMove) % len(possibleMoves)]
 
-        client.sendMove(card.value, mossa)
 
         if(card.space == 1):
             self.space1.cards.remove(card)
@@ -246,6 +266,9 @@ class Game:
         else:
             self.space2.cards.remove(card)
             self.space2.calculate()
+
+        client.sendMove(card.value, mossa)
+
         self.execMove(card, mossa)
 
         self.btnMove.destroy()

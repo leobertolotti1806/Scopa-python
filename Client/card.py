@@ -1,9 +1,6 @@
 from customtkinter import CTkLabel
 from config import *
-#import client
-import threading
 from animation import Rect
-import time
 
 semaphore = threading.Semaphore()
 
@@ -285,6 +282,7 @@ class TableSpace:
             for i in self.rmCards:
                 if(i):
                     i.destroyCard()
+            self.rmCards = []
         
 
             

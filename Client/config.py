@@ -1,7 +1,9 @@
 import customtkinter
 from colorama import Fore, Back, Style
-from PIL import Image, ImageTk, ImageDraw
-import io
+from PIL import Image, ImageTk
+#import io
+import threading
+import time
 
 #palette
 BACK_COLOR = "#70b87b"
@@ -53,25 +55,34 @@ class MessageBox:
 
     color = WHITE
 
-    def __init__(self, root, msg='', color=WHITE):
+    def __init__(self, root, msg='', color=WHITE, font = None, btn = None):
         self.frame = customtkinter.CTkFrame(master=root)
         self.lbl = customtkinter.CTkLabel(
             master=self.frame,
             text=msg, 
             text_color=color,
             wraplength=400,
-            font=default_font_bold(),
+            font = default_font_bold() if font == None else font,
         )
         self.lbl.pack(pady=20, padx=20)
-        self.frame.place(x=centerX(), y=centerY(), anchor="center")
+
+        if btn != None:
+            btn = customtkinter.CTkButton(self.frame, **btn)
+            btn.pack(padx=10, pady=5)
+
     
     def error(self, msg):
         self.lbl.configure(text=msg, text_color=RED)
 
+    def show(self, closingTime = 0):
+        self.frame.place(x=centerX(), y=centerY(), anchor="center")
+
+        if(closingTime != 0):
+            threading.Thread(target=self.waitClose, args=(closingTime, )).start()
+
     def close(self):
         self.frame.destroy()
         
-
-
-
-        
+    def waitClose(self, closingTime):
+        time.sleep(closingTime)
+        self.close()

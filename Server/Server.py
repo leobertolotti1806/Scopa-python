@@ -208,7 +208,7 @@ def mosse(client, cAvversario, game):
                 game["nMosse"] += 1
 
             # Ogni 6 mosse termina il round
-            if game["nMosse"] % 6 == 0:
+            if game["nMosse"] % 6 == 0 and game["nMosse"] != 30:
                 for cli in [client["client"], cAvversario["client"]]:
                     inviaJSON({
                         "request": "newCards",
