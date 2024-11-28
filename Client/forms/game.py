@@ -189,22 +189,31 @@ class Game:
         stopAnimations.clear()
         stopAnimations.wait()
         #ANIMAZIONE
-        if "D7" in self.table.rmCards and len(self.table.cards) == 0:
+        tableCardValues = [c.value for c in self.table.rmCards]
+
+        print(f"[{self.user}]: tableCardValues: {tableCardValues}")
+        print(f"[{self.user}]: self.table.cards: {self.table.cards}")
+
+        if "D7" in tableCardValues and len(tableCardValues) == 0:
             #scopa con settebello
             MessageBox(self.frame,
-                       "Scopa con sette bello!!!",
-                       DARK_GREEN, default_font_subtitle()).show(1.5)
-        elif len(self.table.cards) == 0:
+                    (self.user2 + " ha fatto s" if client.turn else "S") +
+                   "copa con sette bello!!!",
+                   DARK_GREEN, default_font_subtitle()).show(2)
+
+        elif len(tableCardValues) == 0:
             #scopa
-            MessageBox(self.frame,
-                       "Hai fatto scopa!!!",
-                       DARK_GREEN, default_font_subtitle()).show(1.5)
+            MessageBox(self.frame, 
+                (self.user2 + " ha" if client.turn else "Hai") +
+                " fatto scopa!!!",
+                DARK_GREEN, default_font_subtitle()).show(2)
             
-        elif "D7" in self.table.rmCards:
+        elif "D7" in tableCardValues:
             #setteBello
             MessageBox(self.frame,
-                       "Hai preso sette bello!!!",
-                       DARK_GREEN, default_font_subtitle()).show(1.5)
+                (self.user2 + " ha" if client.turn else "Hai") +
+                " preso sette bello!!!",
+                DARK_GREEN, default_font_subtitle()).show(2)
 
         self.table.destroyPickedCards()
     

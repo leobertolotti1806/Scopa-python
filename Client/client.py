@@ -63,7 +63,6 @@ setteBello = False
 nDenari = 0
 puntiTotali = 0
 nScopeAvversario = 0
-lastPlay = False
 
 def waitForGame(nickname, resolver, error):
     threading.Thread(target=connect, args=(nickname, resolver, error)).start()
@@ -116,7 +115,6 @@ def waitMove(game):
     global nScopeAvversario
     global turn
     global startingTurn
-    global lastPlay
     global setteBello
     endThread = False
 
@@ -154,9 +152,6 @@ def waitMove(game):
 
                 if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
                     setteBello = True
-
-                if "lastPlay" in data:
-                    lastPlay = True
                       
             elif data["request"] == "newCards":
                 stopAnimations.clear()
@@ -171,7 +166,10 @@ def waitMove(game):
 
                 #renderizzo mossa
                 game.setStatus()
-
+            elif data["request"] == "viewLastPlay":
+                MessageBox(game.frame,
+                        "Ultima giocata!!!",
+                    DARK_GREEN, default_font_subtitle()).show(2)
             elif data["request"] == "calculatePoints":
                 endThread = True
                 calculatePoints()
