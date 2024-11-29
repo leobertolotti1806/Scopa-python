@@ -62,6 +62,7 @@ nScope = 0
 setteBello = False
 nDenari = 0
 puntiTotali = 0
+lastPlay = False
 nScopeAvversario = 0
 
 def waitForGame(nickname, resolver, error):
@@ -167,13 +168,14 @@ def waitMove(game):
                 #renderizzo mossa
                 game.setStatus()
             elif data["request"] == "viewLastPlay":
+                lastPlay = True
                 MessageBox(game.frame,
                         "Ultima giocata!!!",
                     DARK_GREEN, default_font_subtitle()).show(2)
             elif data["request"] == "calculatePoints":
                 endThread = True
                 calculatePoints()
-                
+                print(f"[{game.user}]: ORA FACCIO CALCULATEPOINTS()")
                 #showPoints()
                 #showPoints()
                 #showPoints()

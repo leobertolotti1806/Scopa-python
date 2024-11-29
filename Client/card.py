@@ -261,6 +261,8 @@ class TableSpace:
         )
 
     def removeCards(self):
+        print(f"table.rmCards == {[c.value for c in self.rmCards]}")
+        print(f"table.cards Prima == {[c.value for c in self.rmCards]}")
         for card in self.rmCards:
             rm = self.indexRm(card)
             if(rm):
@@ -270,12 +272,16 @@ class TableSpace:
                         self.y
                     )
                 )
+        print(f"table.cards Dopo == {[c.value for c in self.cards]}")
         self.calculate()
 
     def indexRm(self, card):
         for i in range(len(self.cards)):
             if(self.cards[i].value == card.value):
-                return self.cards.pop(i)
+                x = self.cards[i]
+                self.cards.remove(self.cards[i])
+                return x
+
             
     def destroyPickedCards(self):
         if(len(stop) == 0):

@@ -186,34 +186,27 @@ class Game:
         stopAnimations.clear() # resetto lo stop
         stopAnimations.wait() # aspetto che mi arriva da qualche carta che sa di essere ultima un evento
         self.table.removeCards()
-        stopAnimations.clear()
-        stopAnimations.wait()
         #ANIMAZIONE
-        tableCardValues = [c.value for c in self.table.rmCards]
+        tableRmCardValues = [c.value for c in self.table.rmCards]
+        tableCardValues = [c.value for c in self.table.cards]
 
         print(f"[{self.user}]: tableCardValues: {tableCardValues}")
         print(f"[{self.user}]: self.table.cards: {self.table.cards}")
 
-        if "D7" in tableCardValues and len(tableCardValues) == 0:
+        if "D7" in tableRmCardValues and len(tableCardValues) == 0:
             #scopa con settebello
-            MessageBox(self.frame,
-                    (self.user2 + " ha fatto s" if client.turn else "S") +
-                   "copa con sette bello!!!",
-                   DARK_GREEN, default_font_subtitle()).show(2)
+            MessageBox(self.frame,"Scopa con sette bello!",
+                   WHITE, default_font_subtitle()).show(2)
 
         elif len(tableCardValues) == 0:
             #scopa
-            MessageBox(self.frame, 
-                (self.user2 + " ha" if client.turn else "Hai") +
-                " fatto scopa!!!",
-                DARK_GREEN, default_font_subtitle()).show(2)
+            MessageBox(self.frame, "Scopa!",
+                WHITE, default_font_subtitle()).show(2)
             
-        elif "D7" in tableCardValues:
+        elif "D7" in tableRmCardValues:
             #setteBello
-            MessageBox(self.frame,
-                (self.user2 + " ha" if client.turn else "Hai") +
-                " preso sette bello!!!",
-                DARK_GREEN, default_font_subtitle()).show(2)
+            MessageBox(self.frame, "Sette bello!",
+                WHITE, default_font_subtitle()).show(2)
 
         self.table.destroyPickedCards()
     
