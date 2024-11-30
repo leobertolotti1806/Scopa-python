@@ -1,4 +1,4 @@
-# config contiene customtkinter
+# config contien e customtkinter
 
 from config import *
 

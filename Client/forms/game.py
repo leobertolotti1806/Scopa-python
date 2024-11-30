@@ -113,9 +113,9 @@ class Game:
         #INGLOVA FUNZIONAMENTO MOSSE / GIOCO DA CLIENT.CLICKCARD
         if client.turn and len(stop) == 0:
             #array table solo con i .value delle card
-            print(f"[{self.user}]: card di click card è : {card}")
             possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
-            
+            print(f"[{self.user}]: possibleMoves: {possibleMoves}")
+                  
             if(len(possibleMoves) == 0):
                 #aggiungo la carta al tavolo
                 if(card.space == 1):
@@ -139,8 +139,8 @@ class Game:
                     self.space2.cards.remove(card)
                     self.space2.calculate()
                     
-                client.sendMove(card.value, possibleMoves[0])
                 self.execMove(card, possibleMoves[0])
+                client.sendMove(card.value, possibleMoves[0])
             else:
                 #posso fare 2 o 2+ mosse
                 self.chooseMove(card, possibleMoves)
@@ -158,8 +158,6 @@ class Game:
             
     def execMove(self, card : Card, pickCard):
         # ora la carte che voglio giocare per proseguire devono aspettare lo stop
-        pickCard.append(card)
-        self.table.cards.append(card)
         self.table.rmCards = pickCard
         print(f"{Back.RED} {Fore.BLACK} Carte da rimuovere: {self.table.rmCards} {Back.BLACK} {Fore.WHITE}")
 
@@ -168,26 +166,39 @@ class Game:
         self.table.cards.append(card)
         pickCard.append(card)
         self.table.removeCards(pickCard)"""
-        threading.Thread(target=self.renderMove, args=(card.value,)).start()
+        threading.Thread(target=self.renderMove, args=(card,)).start()
         #merge del vettore delle carta più la carta stessa
 
     def renderMove(self, card):
         for i in self.table.rmCards:
-            i.move(
+            self.table.cards[i].move(
                 (
-                    self.table.rmCards[0].pos[0],
-                    self.table.rmCards[0].pos[1]
+                    self.table.cards[self.table.rmCards[0]].pos[0],
+                    self.table.cards[self.table.rmCards[0]].pos[1]
                 ),
                 size=CARDS_TABLE_SIZE
             )
+        card.move(
+            (
+                self.table.cards[self.table.rmCards[0]].pos[0],
+                self.table.cards[self.table.rmCards[0]].pos[1]
+            ),
+            size=CARDS_TABLE_SIZE
+        )
         #self.table.waitForRemove(card, pickCard)
         #self.table.waitAnimations()
         #waitAnimations() # aspetto la fine di tutte le animazioni
         stopAnimations.clear() # resetto lo stop
         stopAnimations.wait() # aspetto che mi arriva da qualche carta che sa di essere ultima un evento
-        self.table.removeCards()
+        
         #ANIMAZIONE
-        tableRmCardValues = [c.value for c in self.table.rmCards]
+        #tableRmCardValues = [c.value for c in self.table.rmCards]
+        tableRmCardValues = []
+        for i in self.table.rmCards:
+            tableRmCardValues.append(self.table.cards[i].value)
+            
+        self.table.removeCards(card)
+        
         tableCardValues = [c.value for c in self.table.cards]
 
         print(f"[{self.user}]: tableCardValues: {tableCardValues}")
@@ -195,20 +206,23 @@ class Game:
 
         if "D7" in tableRmCardValues and len(tableCardValues) == 0:
             #scopa con settebello
-            MessageBox(self.frame,"Scopa con sette bello!",
+            print(f"[{self.user}]: Scopa con sette bello!")
+            MessageBox(self.frame, "Scopa con sette bello!",
                    WHITE, default_font_subtitle()).show(2)
 
         elif len(tableCardValues) == 0:
             #scopa
+            print(f"[{self.user}]: Scopa!")
             MessageBox(self.frame, "Scopa!",
                 WHITE, default_font_subtitle()).show(2)
             
         elif "D7" in tableRmCardValues:
             #setteBello
+            print(f"[{self.user}]: Sette bello!")
             MessageBox(self.frame, "Sette bello!",
                 WHITE, default_font_subtitle()).show(2)
 
-        self.table.destroyPickedCards()
+        #self.table.destroyPickedCards(card)
     
     def chooseMove(self, card, possibleMoves):
         #creare bottoni
@@ -269,9 +283,9 @@ class Game:
             self.space2.cards.remove(card)
             self.space2.calculate()
 
-        client.sendMove(card.value, mossa)
 
         self.execMove(card, mossa)
+        client.sendMove(card.value, mossa)
 
         self.btnMove.destroy()
         self.arrowL.destroy()

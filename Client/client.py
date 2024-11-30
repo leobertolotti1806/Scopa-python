@@ -268,18 +268,19 @@ def getMoves(card, table):
     somma = 0
     tableCards = [c.value for c in table]
 
-    for c in table:
-        n = getNumber(c.value)
+    for i in range(len(table)):
+        n = getNumber(table[i].value)
 
         if n == numCarta:
-            possibilities.append([c])
+            #possibilities.append([c])
+            possibilities.append([i])
 
         somma += n
 
     if len(possibilities) == 0:
         if somma == numCarta:
             #prendo tutte le carte del tavolo
-            possibilities.append(table)
+            possibilities.append(range(len(table)))
         else:
             #NON HO CARTE DELLO STESSO VALORE SUL TAVOLO E CONTINUO A CERCARE COMBINAZIONI
 
@@ -298,6 +299,7 @@ def getMoves(card, table):
                         if perm not in possibilities:
                             possibilities.append(perm)
             for i in range(len(possibilities)):
-                possibilities[i] = [c for c in table if c.value in possibilities[i]]
+                #possibilities[i] = [c for c in table if c.value in possibilities[i]]
+                possibilities[i] = [index for index, c in enumerate(table) if c.value in possibilities[i]]
             #includo nell array non solo i .value ma tutto l'oggetto grafico
     return possibilities

@@ -194,21 +194,16 @@ def mosse(client, cAvversario, game):
         # Riceve la mossa dal giocatore attuale
         mossa = riceviJSON(client["client"])
         print(f"[{client['nome']}]: Mossa ricevuta: {mossa}")
-        print(f"[{client['nome']}]: nMosse: {game["nMosse"]}")
+        print(f"[{client['nome']}]: nMosse: {game['nMosse']}")
 
         if mossa["request"] == "move":
             # Invia la mossa all"altro giocatore
-            obj = mossa
 
-            if game["nMosse"] != 28:
-                inviaJSON(obj, cAvversario["client"])
-            else:
-                obj = {
-                    "request": "viewLastPlay",
-                    "lastPlay": True
-                }
-                inviaJSON(obj, [client["client"], cAvversario["client"]])
-                inviaJSON(mossa, cAvversario["client"])
+            if game["nMosse"] == 29:
+                inviaJSON({"request": "viewLastPlay"}, 
+                          [client["client"], cAvversario["client"]])
+                
+            inviaJSON(mossa, cAvversario["client"])
 
             with game["lock"]:
                 game["nMosse"] += 1
