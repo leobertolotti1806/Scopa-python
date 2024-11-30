@@ -114,7 +114,7 @@ class Game:
         if client.turn and len(stop) == 0:
             #array table solo con i .value delle card
             possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
-            print(f"[{self.user}]: possibleMoves: {possibleMoves}")
+            #print(f"[{self.user}]: possibleMoves: {possibleMoves}")
                   
             if(len(possibleMoves) == 0):
                 #aggiungo la carta al tavolo
@@ -138,9 +138,9 @@ class Game:
                 else:
                     self.space2.cards.remove(card)
                     self.space2.calculate()
-                    
+                
+                client.sendMove(card.value, self.getCardsFromIndices(possibleMoves[0]))
                 self.execMove(card, possibleMoves[0])
-                client.sendMove(card.value, possibleMoves[0])
             else:
                 #posso fare 2 o 2+ mosse
                 self.chooseMove(card, possibleMoves)
@@ -159,6 +159,7 @@ class Game:
     def execMove(self, card : Card, pickCard):
         # ora la carte che voglio giocare per proseguire devono aspettare lo stop
         self.table.rmCards = pickCard
+
         print(f"{Back.RED} {Fore.BLACK} Carte da rimuovere: {self.table.rmCards} {Back.BLACK} {Fore.WHITE}")
 
         """for i in self.table.rmCards:
@@ -192,19 +193,15 @@ class Game:
         stopAnimations.wait() # aspetto che mi arriva da qualche carta che sa di essere ultima un evento
         
         #ANIMAZIONE
-        #tableRmCardValues = [c.value for c in self.table.rmCards]
-        tableRmCardValues = []
-        for i in self.table.rmCards:
-            tableRmCardValues.append(self.table.cards[i].value)
-            
         self.table.removeCards(card)
         
-        tableCardValues = [c.value for c in self.table.cards]
-
+        tableCardValues = client.getValues(self.table.cards)
         print(f"[{self.user}]: tableCardValues: {tableCardValues}")
         print(f"[{self.user}]: self.table.cards: {self.table.cards}")
+        print(f"[{self.user}]: card.value: {card.value}")
 
-        if "D7" in tableRmCardValues and len(tableCardValues) == 0:
+        if ("D7" in tableCardValues or
+            "D7" == card.value) and len(tableCardValues) == 0:
             #scopa con settebello
             print(f"[{self.user}]: Scopa con sette bello!")
             MessageBox(self.frame, "Scopa con sette bello!",
@@ -216,12 +213,13 @@ class Game:
             MessageBox(self.frame, "Scopa!",
                 WHITE, default_font_subtitle()).show(2)
             
-        elif "D7" in tableRmCardValues:
+        elif ("D7" in tableCardValues or
+            "D7" == card.value):
             #setteBello
             print(f"[{self.user}]: Sette bello!")
             MessageBox(self.frame, "Sette bello!",
                 WHITE, default_font_subtitle()).show(2)
-
+            
         #self.table.destroyPickedCards(card)
     
     def chooseMove(self, card, possibleMoves):
@@ -257,7 +255,7 @@ class Game:
         )
         self.arrowR.place(x=centerX() + 60, y=LOGO_Y + 100, anchor="center")
         self.arrowR.bind("<Button-1>", lambda event, m=possibleMoves: self.scrollMove(1, m))
-        
+
         self.displayPossibleMove(possibleMoves)
 
     def scrollMove(self, change, possibleMoves):
@@ -268,13 +266,14 @@ class Game:
 
     def displayPossibleMove(self, possibleMoves): 
         self.clearCardsBackground()
-        
+        #possibleMovesInCards = self.getCardsFromIndices(possibleMoves)
+        #prendo le carte del tavolo in base agli indici
         for i in possibleMoves[abs(self.currentMove) % len(possibleMoves)]:
-            i.configure(bg_color=RED)
+            #i.configure(bg_color=RED)
+            self.table.cards[i].configure(bg_color=RED)
 
     def confirmMove(self, card, possibleMoves):
         mossa = possibleMoves[abs(self.currentMove) % len(possibleMoves)]
-
 
         if(card.space == 1):
             self.space1.cards.remove(card)
@@ -283,9 +282,8 @@ class Game:
             self.space2.cards.remove(card)
             self.space2.calculate()
 
-
         self.execMove(card, mossa)
-        client.sendMove(card.value, mossa)
+        client.sendMove(card.value, self.getCardsFromIndices(mossa))
 
         self.btnMove.destroy()
         self.arrowL.destroy()
@@ -316,3 +314,11 @@ class Game:
                 "Sta pensando 🤨",
                 "Sta pensando 🤔"
             ])
+
+    def getCardsFromIndices(self, indices):
+        #Controlla se è una matrice o no
+        if isinstance(indices[0], list):
+            return [self.table.cards[i] for group in indices for i in group]
+        else: 
+            #Lista normale
+            return [self.table.cards[i] for i in indices]

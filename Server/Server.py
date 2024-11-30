@@ -155,11 +155,13 @@ def partita(client1, client2, check1, check2, mazzo):
         checkClientsThreadList.remove(check2)
 
     print(f"[partita di {client1['nome']} - {client2['nome']}]: Avviata")
-
-    t1 = threading.Thread(target=mosse, args=(client1, client2, game))
-    t1.name = client1["nome"]
     
-    t2 = threading.Thread(target=mosse, args=(client2, client1, game))
+    t2 = threading.Thread()
+
+    t1 = threading.Thread(target=mosse, args=(client1, client2, game, t2))
+    t2 = threading.Thread(target=mosse, args=(client2, client1, game, t1))
+
+    t1.name = client1["nome"]
     t2.name = client2["nome"]
 
     t1.start()
@@ -189,8 +191,8 @@ def pesca(game, nCarte):
 
     return carteScelte
 
-def mosse(client, cAvversario, game):
-    while not game["err"] and game["nMosse"] < 30:
+def mosse(client, cAvversario, game, threadAvversario):
+    while not game["err"] and game["nMosse"] < 29:
         # Riceve la mossa dal giocatore attuale
         mossa = riceviJSON(client["client"])
         print(f"[{client['nome']}]: Mossa ricevuta: {mossa}")
@@ -199,7 +201,7 @@ def mosse(client, cAvversario, game):
         if mossa["request"] == "move":
             # Invia la mossa all"altro giocatore
 
-            if game["nMosse"] == 29:
+            if game["nMosse"] == 28:
                 inviaJSON({"request": "viewLastPlay"}, 
                           [client["client"], cAvversario["client"]])
                 
@@ -230,4 +232,11 @@ def mosse(client, cAvversario, game):
 
             print(f"[{client['nome']}]: Il client avversario [{cAvversario['nome']}] ha terminato la partita e confermo l'uscita")
 
+    if not game["err"]:
+        print(f"[{client['nome']}]: threadAvversario.is_alive(): {threadAvversario.is_alive()}")
+        
+        if threadAvversario.is_alive():
+            threadAvversario.join()
+
+    print(f"[{client['nome']}]: FINISCO PARTITA")
 avviaServer()

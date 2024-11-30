@@ -134,7 +134,9 @@ def waitMove(game):
                 #renderizzo turno
                 game.setStatus()
                 
-                tableCardsPicked = [c for c in game.table.cards if c.value in data["tableCardsPicked"]] # carte prese dall' avversario
+                # carte prese dall' avversario
+                tableCardsPicked = [index for index, c in enumerate(game.table.cards) if c.value in data["tableCardsPicked"]]
+                print(f"[{game.user}]: tableCardsPicked in request: move = {tableCardsPicked}")
 
                 if len(game.table.cards) - len(tableCardsPicked):
                     nScopeAvversario += 1
@@ -149,7 +151,9 @@ def waitMove(game):
                     game.execMove(
                         removedCard, # carta giocata dall'avversario
                         tableCardsPicked
+                        #tableCardsPicked carte prese dall'avversario
                     )
+                    
 
                 if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
                     setteBello = True
@@ -239,18 +243,26 @@ def sendMove(card, move):
     global nDenari
     global turn
 
-    tableCardsPicked = [c.value for c in move]
+    obj = {
+        "request": "move",
+        "tableCardsPicked" : move,
+        "cardPlayed": card
+        }
+    
+    print(f"inviaJSON di f {obj}")
+
+    move = getValues(move)
 
     inviaJSON({
         "request": "move",
-        "tableCardsPicked" : tableCardsPicked,
+        "tableCardsPicked" : move,
         "cardPlayed": card
         })
 
     if len(move) != 0:
         pickedCards.append(card)
 
-        for c in tableCardsPicked:
+        for c in move:
             pickedCards.append(c)
 
             if c[0] == "D":
@@ -262,11 +274,14 @@ def sendMove(card, move):
 def getNumber(card):
     return int(card[1:])
 
+def getValues(arr):
+    return [c.value for c in arr]
+
 def getMoves(card, table):
     possibilities = []
     numCarta = getNumber(card)
     somma = 0
-    tableCards = [c.value for c in table]
+    tableCards = getValues(table)
 
     for i in range(len(table)):
         n = getNumber(table[i].value)
@@ -280,7 +295,7 @@ def getMoves(card, table):
     if len(possibilities) == 0:
         if somma == numCarta:
             #prendo tutte le carte del tavolo
-            possibilities.append(range(len(table)))
+            possibilities.append(list(range(len(table))))
         else:
             #NON HO CARTE DELLO STESSO VALORE SUL TAVOLO E CONTINUO A CERCARE COMBINAZIONI
 
@@ -298,6 +313,7 @@ def getMoves(card, table):
                         perm = sorted(perm)
                         if perm not in possibilities:
                             possibilities.append(perm)
+
             for i in range(len(possibilities)):
                 #possibilities[i] = [c for c in table if c.value in possibilities[i]]
                 possibilities[i] = [index for index, c in enumerate(table) if c.value in possibilities[i]]

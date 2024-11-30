@@ -261,11 +261,14 @@ class TableSpace:
         )
 
     def removeCards(self, card):
-        print(f"table.rmCards == {self.rmCards}")
-        print(f"table.cards Prima == {[c.value for c in self.cards]}")
+        """ print(f"table.rmCards == {self.rmCards}")
+        print(f"table.cards Prima == {[c.value for c in self.cards]}") """
+        rmToRemove = []
         for i in self.rmCards:
             #rm = self.indexRm(self.rmCards[i])
-            rm = self.cards.pop(i)
+            rmToRemove.append(i)
+            #rm = self.cards.pop(i) QUI ELIMINO
+            rm = self.cards[i] #QUI PRENDO LA CARTA
             if(rm):
                 rm.move(
                     (
@@ -275,9 +278,17 @@ class TableSpace:
                 )
                 
         card.move((R_WIDTH + self.size[0], self.y))
+
+        rmToRemove.sort(reverse=True)
+        #ordino gli indici delle carte da rimuovere e rimuovo le carte
+        #da quella con indice maggiore verso quella con indice minore così
+        #non si creano problemi con out of range
+        for i in rmToRemove:
+            #print(f"faccio la pop di sel.cards.pop(i), i = {i}")
+            self.cards.pop(i)
         
-        print(f"table.rmCards == {self.rmCards}")
-        print(f"table.cards Dopo == {[c.value for c in self.cards]}")
+        """ print(f"table.rmCards == {self.rmCards}")
+        print(f"table.cards Dopo == {[c.value for c in self.cards]}") """
         self.calculate()
 
     def indexRm(self, rmCard):
