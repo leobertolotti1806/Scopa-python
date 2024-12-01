@@ -27,6 +27,15 @@ def riceviJson(qta = 1024):
 def inviaJSON(messaggio):
     client.send(stringifyObject(messaggio).encode())
 
+def getNumber(card):
+    return int(card[1:])
+
+def getValues(arr):
+    return [c.value for c in arr]
+
+def getIndexFromValues(table, cards):
+    return [index for index, c in enumerate(table) if c.value in cards]
+
 def chiusura(root):
     if waitMoveThread.is_alive():
         #HO ANCORA IL THREAD CONNESSO AL SERVER
@@ -35,7 +44,6 @@ def chiusura(root):
         inviaJSON({"request": "closingClient"})
         print("SONO in una partita e chiudo il client")
         print('"request": "closingClient"')
-
     else:
         #NON SONO ANCORA IN UNA PARTITA
         try:
@@ -44,79 +52,72 @@ def chiusura(root):
         except:
             pass
         print('"request": "stopWaiting"')
+
     root.destroy()
+
+def home(root):
+    root.destroy()
+    from forms.login import Login
+    Login(root.master)
+    
 
 Host = "192.168.178.24"
 Host = socket.gethostbyname(socket.gethostname())
 Porta = 9999
 Indirizzo = (Host, Porta)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+lock = threading.Lock()
 
 waitMoveThread = threading.Thread()
-data = {}
 turn = False
 startingTurn = False
+alreadyConnected = False
 #variabili per i punteggi
 pickedCards = []
-nScope = 0
-setteBello = False
-nDenari = 0
-puntiTotali = 0
+points = {
+    "Scope1": 0,
+    "Scope2": 0,
+    "Sette bello": "No",
+    "Denari": 0
+}
 lastPlay = False
-nScopeAvversario = 0
+lastTake = False
 
 def waitForGame(nickname, resolver, error):
     threading.Thread(target=connect, args=(nickname, resolver, error)).start()
 
 def connect(nickname, resolver, error):
-    canIPlay = True
-    try:
-        # Prova a connettersi al server
+    global alreadyConnected
+    global client
+
+    if not alreadyConnected:
+        alreadyConnected = True
+        canIPlay = True
+        try:
+            # Prova a connettersi al server
+            client.connect(Indirizzo)
+        except OSError as e:
+            canIPlay = False
+            error(f'Mi spiace ma è impossibile collegarsi al Server!!')
+            # Gestisce errori di connessione
+        
+        if canIPlay:
+            #il server non è avviato
+            inviaJSON({"nome": nickname})
+            resolver(riceviJson())
+    else:
+        #voglio rigiocare
+        """ client = None """
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(Indirizzo)
-    except:
-        # Gestisce errori di connessione
-        canIPlay = False
-        error(f'Mi spiace ma è impossibile collegarsi al Server!!')
-    
-    if canIPlay:
-        #il server non è avviato
         inviaJSON({"nome": nickname})
+        print("HO MANDATO CON SUCCESSO")
         resolver(riceviJson())
 
-lock = threading.Lock()
-
-def calculatePoints():
-    global nDenari
-    global puntiTotali
-    card = "pari"
-    denari = "pari"
-
-    #controllo numero carte
-    if len(pickedCards) > 20:
-        puntiTotali += 1
-        carte = True
-    elif len(pickedCards) < 20:
-        carte = False
-
-    if nDenari > 5:
-        puntiTotali += 1
-        denari = True
-    elif nDenari < 5:
-        denari = False
-
-    puntiTotali += nScope
-    #FAI CONTROLLO VITTORIA
-    #FAI CONTROLLO VITTORIA
-    #FAI CONTROLLO VITTORIA
-    #FAI CONTROLLO VITTORIA
-
-
 def waitMove(game):
-    global data
-    global nScopeAvversario
     global turn
     global startingTurn
-    global setteBello
+    global lastTake
     endThread = False
 
     inviaJSON({"request": "startGameOk"})
@@ -125,6 +126,7 @@ def waitMove(game):
 
         data = riceviJson()
         print(f"[{game.user}]: data = {data}")
+        print(f"[{game.user}]: lastTake = {lastTake}")
 
         if data != None:
             if data["request"] == "move":
@@ -135,11 +137,11 @@ def waitMove(game):
                 game.setStatus()
                 
                 # carte prese dall' avversario
-                tableCardsPicked = [index for index, c in enumerate(game.table.cards) if c.value in data["tableCardsPicked"]]
+                tableCardsPicked = getIndexFromValues(game.table.cards, data["tableCardsPicked"])
                 print(f"[{game.user}]: tableCardsPicked in request: move = {tableCardsPicked}")
 
                 if len(game.table.cards) - len(tableCardsPicked):
-                    nScopeAvversario += 1
+                    points["Scope2"] += 1
 
                 game.space2.cards[0].value = data["cardPlayed"]
                 removedCard = game.space2.cards.pop(0)
@@ -148,6 +150,8 @@ def waitMove(game):
                 if len(tableCardsPicked) == 0:
                     game.table.addCard(removedCard) 
                 else:
+                    lastTake = False
+
                     game.execMove(
                         removedCard, # carta giocata dall'avversario
                         tableCardsPicked
@@ -156,7 +160,7 @@ def waitMove(game):
                     
 
                 if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
-                    setteBello = True
+                    points["Sette bello"] = "Sì"
                       
             elif data["request"] == "newCards":
                 stopAnimations.clear()
@@ -176,58 +180,40 @@ def waitMove(game):
                 MessageBox(game.frame,
                         "Ultima giocata!!!",
                     DARK_GREEN, default_font_subtitle()).show(2)
+                
             elif data["request"] == "calculatePoints":
                 endThread = True
-                calculatePoints()
-                print(f"[{game.user}]: ORA FACCIO CALCULATEPOINTS()")
-                #showPoints()
-                #showPoints()
-                #showPoints()
-                #showPoints()
-                #showPoints()
+                stopAnimations.clear()
+                stopAnimations.wait()
+                #aspetto tutte le animazioni
+
+                if lastTake and len(game.table.cards) != 0:
+                    print(f"[{game.user}]: devo prendere tutte le carte rimanenti")
+
+                turn = False #rendo non cliccabili le carte
+                from forms.points import PointTable
+                
+                tabella = PointTable(game.frame, pickedCards, points,
+                                     [game.user, game.user2], lambda: home(game.frame))
+                
+                tabella.place(relx=0.5, rely=0.5, anchor="center")
+
             elif data["request"] == "endGameError":
-                turn = False#rendo le carte NON cliccabili
+                turn = False #rendo le carte NON cliccabili
                 endThread = True
+
                 inviaJSON({"request": "confirmedForceQuit"})
 
-                stopAnimations.clear()
-                if len(stop) != 0:
-                    stopAnimations.wait()
                 msgBox = MessageBox(
                     root=game.frame, 
                     msg="L'avversario è uscito dal gioco",
                     color=RED, 
-                    btn = {    
+                    btn = {
                         "text": "Torna alla home",
                         "fg_color": RED,
                         "text_color": WHITE,
-                        "command": 
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        """ lambda: print("BTN TORNA HOME")
-                        lambda: game.frame.destroy()
-                        lambda: vadoAlLogin() """
-                        
-                        })
+                        "command": lambda: home(game.frame)
+                    })
 
                 msgBox.show()
                 #MOSTRA ERRORE CHE L'ALTRO GIOCATORE HA QUITTATO
@@ -240,16 +226,7 @@ def waitMove(game):
             endThread = True
 
 def sendMove(card, move):
-    global nDenari
     global turn
-
-    obj = {
-        "request": "move",
-        "tableCardsPicked" : move,
-        "cardPlayed": card
-        }
-    
-    print(f"inviaJSON di f {obj}")
 
     move = getValues(move)
 
@@ -266,16 +243,10 @@ def sendMove(card, move):
             pickedCards.append(c)
 
             if c[0] == "D":
-                nDenari += 1
+                points["Denari"] += 1
 
         if card[0] == "D":
-            nDenari += 1
-
-def getNumber(card):
-    return int(card[1:])
-
-def getValues(arr):
-    return [c.value for c in arr]
+            points["Denari"] += 1
 
 def getMoves(card, table):
     possibilities = []
@@ -316,6 +287,6 @@ def getMoves(card, table):
 
             for i in range(len(possibilities)):
                 #possibilities[i] = [c for c in table if c.value in possibilities[i]]
-                possibilities[i] = [index for index, c in enumerate(table) if c.value in possibilities[i]]
-            #includo nell array non solo i .value ma tutto l'oggetto grafico
+                possibilities[i] = getIndexFromValues(table, possibilities[i])
+                
     return possibilities

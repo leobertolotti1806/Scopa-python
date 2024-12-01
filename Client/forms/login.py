@@ -2,7 +2,6 @@
 from config import *
 from forms.game import *
 
-
 class Login:
     def __init__(self, root : customtkinter.CTk):
         self.root = root
@@ -58,5 +57,3 @@ class Login:
     def StartGame(self, user):
         self.frame.destroy()
         Game(self.root, user)
-
-

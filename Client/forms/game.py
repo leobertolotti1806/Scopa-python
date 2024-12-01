@@ -110,9 +110,7 @@ class Game:
         )
 
     def clickCard(self, card : Card):
-        #INGLOVA FUNZIONAMENTO MOSSE / GIOCO DA CLIENT.CLICKCARD
         if client.turn and len(stop) == 0:
-            #array table solo con i .value delle card
             possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
             #print(f"[{self.user}]: possibleMoves: {possibleMoves}")
                   
@@ -131,6 +129,7 @@ class Game:
             elif (len(possibleMoves) == 1):
                 #posso fare SOLO una (1) mossa
                 #prendo la/le carta/carte di possibleMoves[0]
+                client.lastTake = True
 
                 if(card.space == 1):
                     self.space1.cards.remove(card)
@@ -142,13 +141,14 @@ class Game:
                 client.sendMove(card.value, self.getCardsFromIndices(possibleMoves[0]))
                 self.execMove(card, possibleMoves[0])
             else:
+                client.lastTake = True
                 #posso fare 2 o 2+ mosse
                 self.chooseMove(card, possibleMoves)
 
             if not client.lastPlay and len(self.table.cards) == 0:
                 #se è l'ultima mossa e NON E' L'ULTIMA MOSSA
                 #aggiungo un punto
-                client.nScope += 1
+                client.points["Scope1"] += 1
 
             with client.lock:
                 client.turn = False
@@ -192,15 +192,17 @@ class Game:
         stopAnimations.clear() # resetto lo stop
         stopAnimations.wait() # aspetto che mi arriva da qualche carta che sa di essere ultima un evento
         
+        engagedCards = client.getValues(self.getCardsFromIndices(self.table.rmCards))
         #ANIMAZIONE
         self.table.removeCards(card)
         
         tableCardValues = client.getValues(self.table.cards)
+        print(f"[{self.user}]: engagedCards SALVATI IN INDICI: {engagedCards}")
         print(f"[{self.user}]: tableCardValues: {tableCardValues}")
         print(f"[{self.user}]: self.table.cards: {self.table.cards}")
         print(f"[{self.user}]: card.value: {card.value}")
 
-        if ("D7" in tableCardValues or
+        if ("D7" in engagedCards or
             "D7" == card.value) and len(tableCardValues) == 0:
             #scopa con settebello
             print(f"[{self.user}]: Scopa con sette bello!")
@@ -213,7 +215,7 @@ class Game:
             MessageBox(self.frame, "Scopa!",
                 WHITE, default_font_subtitle()).show(2)
             
-        elif ("D7" in tableCardValues or
+        elif ("D7" in engagedCards or
             "D7" == card.value):
             #setteBello
             print(f"[{self.user}]: Sette bello!")
@@ -316,7 +318,6 @@ class Game:
             ])
 
     def getCardsFromIndices(self, indices):
-        #Controlla se è una matrice o no
         if isinstance(indices[0], list):
             return [self.table.cards[i] for group in indices for i in group]
         else: 
