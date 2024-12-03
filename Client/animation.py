@@ -34,6 +34,7 @@ class AnimationText:
     thread = None
 
     def __init__(self, root, lbl, duration, frames):
+        self.closeAnimation = threading.Event()
         self.stop = False
         self.finish = [False]
         self.root = root
@@ -44,22 +45,21 @@ class AnimationText:
         self.thread.start()
 
     def animate(self):
-        if(self.stop == False):
-            try:
-                self.lbl.configure(text=self.frames[self.index])
-            except:
-                self.finish = [True]
-                return
+        if(self.stop):
+            self.closeAnimation.set()
+            return
+        
+        self.lbl.configure(text=self.frames[self.index])
+
         self.index += 1
         if(self.index == len(self.frames)):
             self.index = 0
-        if(self.stop == False):
-            self.root.after(self.duration, self.animate)
-        else:
-            self.finish = [True]
-            return
-
-    def waitStop(self):
+        self.root.after(self.duration, self.animate)
+        
+    def stopAnimation(self):
         self.stop = True
+        if(self.thread.is_alive()):
+            self.closeAnimation.wait()
+        self.closeAnimation.clear()
             
         

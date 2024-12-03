@@ -35,7 +35,7 @@ class Game:
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
     def InitGame(self, obj):
-        self.animation.waitStop()
+        self.animation.stopAnimation()
         self.msgBox.close()
         self.user2 = obj["user2"]
 
@@ -72,9 +72,8 @@ class Game:
         client.deck = obj["cards"]
             
     def Error(self, msg):
-        self.animation.stop = True
+        self.animation.stopAnimation()
         self.msgBox.error(msg)
-        self.msgBox.show()
 
     def BuildDrawCard(self, card):
         self.space1 = HandSpace(
@@ -162,11 +161,6 @@ class Game:
 
         print(f"{Back.RED} {Fore.BLACK} Carte da rimuovere: {self.table.rmCards} {Back.BLACK} {Fore.WHITE}")
 
-        """for i in self.table.rmCards:
-            i.waitStop = True
-        self.table.cards.append(card)
-        pickCard.append(card)
-        self.table.removeCards(pickCard)"""
         threading.Thread(target=self.renderMove, args=(card,)).start()
         #merge del vettore delle carta più la carta stessa
 
@@ -186,9 +180,6 @@ class Game:
             ),
             size=CARDS_TABLE_SIZE
         )
-        #self.table.waitForRemove(card, pickCard)
-        #self.table.waitAnimations()
-        #waitAnimations() # aspetto la fine di tutte le animazioni
         stopAnimations.clear() # resetto lo stop
         stopAnimations.wait() # aspetto che mi arriva da qualche carta che sa di essere ultima un evento
         
@@ -300,8 +291,7 @@ class Game:
     
     def setStatus(self):
         print(f"[{self.user}]: client.turn: {client.turn}")
-        if(self.animation.thread.is_alive()):
-            self.animation.waitStop()
+        self.animation.stopAnimation()
         if(client.turn):
             self.lblstatus2.configure(text="")
             self.animation = animation.AnimationText(self.root, self.lblstatus1, 300, [

@@ -27,6 +27,10 @@ class Card(CTkLabel):
         self.img = image
         self.size = size
         self.space = space
+        self.frameDis = 0
+        self.frameDuration = 0.01
+        self.duration = 5
+
         self.stopCard = False
         self.closedCard = threading.Event()
         self.eventAnimation = threading.Event()
@@ -40,8 +44,8 @@ class Card(CTkLabel):
 
     def waitAnimation(self):
         while True:
-            x = round(self.pos[0])
-            y = round(self.pos[1])
+            x = self.pos[0]
+            y = self.pos[1]
             sizeX = self.size[0]
             value = self.value
             print(Back.WHITE + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " sono pronto a partire" + Back.BLACK + Fore.WHITE, end="\n")
@@ -92,38 +96,59 @@ class Card(CTkLabel):
     def animation(self, x, y, rect : Rect):
         print(Back.CYAN + Fore.BLUE + f"{self.value}:" + Fore.WHITE + f" ha iniziato a percorrere la retta:" + Fore.GREEN + f" y = {rect.m}x + {rect.q}" + Fore.WHITE + Back.BLACK, end="\n")
         if(not rect.error):
-            index = 0
-            posX = round(self.pos[0])
-            posY = round(self.pos[1])
-            while x != posX:
+            timePassed = 0
+            posX = self.pos[0]
+            posY = self.pos[1]
+            while timePassed != self.duration and timePassed < self.duration:
                 #print(x)
-                index += 1
-                if(not rect.imp):
-                    if(posX < x):
-                        x -= 1
-                    else:
-                        x += 1
+                if(posX < x):
+                    x -= self.frameDis
+                    y = rect.getY(x)
+                elif(posX > x):
+                    x += self.frameDis
                     y = rect.getY(x)
                 else:
                     if(posY < y):
-                        y -= 1
+                        y -= self.frameDis
                     else:
-                        y += 1
+                        y += self.frameDis
 
-                self.place(x=x, y=y, anchor="center")
                 #self._update_image()
-                if(index == 2):
-                    time.sleep(0.0025)
-                    index = 0
+                self.place(x=x, y=y, anchor="center")
+                self._update_image()
+                time.sleep(self.frameDuration)#0.0025
+                timePassed += self.frameDuration
 
-    def move(self, p2, timeW = 0, size = "NaN", newValue=""):
-        self.pos = p2
+    def move(self, p2, duration = 1, delay = 0, size = "NaN", newValue="", msg=""):
+        if(msg != ""):
+            print(msg, "ha avviato il movimento")
+
         if(newValue != ""):
             self.value = newValue
         if(size != "NaN"):
             self.size = size
+
+        self.duration = duration  
+
+        distanceX = abs((self.pos[0] - p2[0]))
+        nFrame = self.duration / self.frameDuration
+
+        if(distanceX != 0):
+            self.frameDis = distanceX / nFrame
+        else:
+            distanceY = abs((self.pos[1] - p2[1]))
+            if(distanceY != 0):
+                self.frameDis = distanceY / nFrame
+            else:
+                return
+
+        print(f"[{self.value}]", "from", self.pos, "to", p2, f"(distance : {distanceX})")
+        #print(f"[{self.value}] : {self.pos[0]} - {p2[0]} = {distanceX} --> distanza")
+
+        self.pos = p2
+
         if(not self.eventAnimation.is_set()):
-            self.waitBeforeAnimation = timeW
+            self.waitBeforeAnimation = delay
             self.eventAnimation.set()
 
     def checkStop(self):
@@ -190,7 +215,7 @@ class HandSpace:
                     xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i),
                     self.y
                 ),
-                timeW = time
+                delay = time
             )
             
 class TableSpace:
@@ -245,7 +270,7 @@ class TableSpace:
                     x,
                     self.y
                 ),
-                timeW=time
+                delay=time
             )
         return x # ultima posizione dove inserire la carta
     
