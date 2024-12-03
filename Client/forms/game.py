@@ -48,15 +48,34 @@ class Game:
 
         self.lbl.place(x=centerX(), y=LOGO_Y, anchor="center")
 
+        # setting name and turn animation of p1
         self.lbluser1 = customtkinter.CTkLabel(master=self.frame, text=self.user, text_color=WHITE, font=default_font_subtitle())
         self.lbluser1.place(x=30, y=R_HEIGHT - 50, anchor="sw")
         self.lblstatus1 = customtkinter.CTkLabel(master=self.frame, text_color=DARK_GRAY, font=default_font_medium())
         self.lblstatus1.place(x = 30, y = R_HEIGHT - 20, anchor="sw")
 
+        # setting name and turn animation of p2
         self.lbluser2 = customtkinter.CTkLabel(master=self.frame, text=self.user2, text_color=WHITE, font=default_font_subtitle())
         self.lbluser2.place(x= R_WIDTH - 30, y= 10, anchor="ne")
         self.lblstatus2 = customtkinter.CTkLabel(master=self.frame, text_color=DARK_GRAY, font=default_font_medium())
         self.lblstatus2.place(x = R_WIDTH - 30, y = 60, anchor="ne")
+
+        # setting lbl deck card
+        self.frameDeck = customtkinter.CTkFrame(master=self.frame)
+        customtkinter.CTkLabel(
+            master=self.frameDeck,
+            text="CARTE\nRIMASTE",
+            text_color=WHITE,
+            font=default_font_bold()
+        ).pack(padx=10, pady=(10, 1))
+        self.lbldeck = customtkinter.CTkLabel(
+            master=self.frameDeck,
+            text="30",
+            text_color=WHITE,
+            font=default_font_subtitle()
+        )
+        self.lbldeck.pack(padx=10, pady=(1, 10))
+        self.frameDeck.place(x=R_WIDTH - 10, y=R_HEIGHT - 10, anchor="se")
 
         #set turno
         with client.lock:
