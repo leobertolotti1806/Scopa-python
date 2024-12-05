@@ -71,8 +71,12 @@ class MessageBox:
             btn.pack(padx=10, pady=5)
 
     
-    def error(self, msg):
+    def error(self, msg, btn = None):
         self.lbl.configure(text=msg, text_color=RED)
+
+        if btn != None:
+            btn = customtkinter.CTkButton(self.frame, **btn)
+            btn.pack(padx=10, pady=5)
 
     def show(self, closingTime = 0):
         self.frame.place(x=centerX(), y=centerY(), anchor="center")

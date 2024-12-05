@@ -29,7 +29,7 @@ class Card(CTkLabel):
         self.space = space
         self.frameDis = 0
         self.frameDuration = 0.01
-        self.duration = 5
+        self.duration = 1
 
         self.stopCard = False
         self.closedCard = threading.Event()
@@ -59,7 +59,7 @@ class Card(CTkLabel):
                 self.closedCard.set()
                 break
 
-            print(Back.LIGHTBLACK_EX + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " animazione verso" + Fore.GREEN + f" {x};{y}" + Fore.WHITE +" partita" + Back.BLACK + Fore.WHITE, end="\n")
+            print(Back.LIGHTBLACK_EX + Fore.BLUE + f"{self.value}:" + Fore.BLACK + " animazione verso" + Fore.GREEN + f" {self.pos[0]};{self.pos[1]}" + Fore.WHITE +" partita" + Back.BLACK + Fore.WHITE, end="\n")
 
             #eventStartAnimation.set()
 
@@ -107,7 +107,7 @@ class Card(CTkLabel):
                 elif(posX > x):
                     x += self.frameDis
                     y = rect.getY(x)
-                else:
+                elif(rect.imp):
                     if(posY < y):
                         y -= self.frameDis
                     else:
@@ -115,11 +115,12 @@ class Card(CTkLabel):
 
                 #self._update_image()
                 self.place(x=x, y=y, anchor="center")
-                self._update_image()
                 time.sleep(self.frameDuration)#0.0025
                 timePassed += self.frameDuration
+                timePassed = round(timePassed, 2)
+                print(f"[{self.value}]: ",timePassed, "--", self.duration, f"currentPos:({x}, {y}) -- finalpos:({self.pos[0]}, {self.pos[1]})")
 
-    def move(self, p2, duration = 1, delay = 0, size = "NaN", newValue="", msg=""):
+    def move(self, p2, duration, delay = 0, size = "NaN", newValue="", msg=""):
         if(msg != ""):
             print(msg, "ha avviato il movimento")
 
@@ -128,10 +129,10 @@ class Card(CTkLabel):
         if(size != "NaN"):
             self.size = size
 
-        self.duration = duration  
+        self.duration = duration
 
         distanceX = abs((self.pos[0] - p2[0]))
-        nFrame = self.duration / self.frameDuration
+        nFrame = duration / self.frameDuration
 
         if(distanceX != 0):
             self.frameDis = distanceX / nFrame
@@ -142,7 +143,7 @@ class Card(CTkLabel):
             else:
                 return
 
-        print(f"[{self.value}]", "from", self.pos, "to", p2, f"(distance : {distanceX})")
+        print(f"[{self.value}]", "from", self.pos, "to", p2, f"(distance : {distanceX}, frameDis: {self.frameDis}, nFrame: {nFrame}), duration class: {self.duration}s, duration param: {duration}s")
         #print(f"[{self.value}] : {self.pos[0]} - {p2[0]} = {distanceX} --> distanza")
 
         self.pos = p2
@@ -215,7 +216,8 @@ class HandSpace:
                     xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i),
                     self.y
                 ),
-                delay = time
+                0.5,
+                delay= time
             )
             
 class TableSpace:
@@ -230,6 +232,7 @@ class TableSpace:
         yStart
     ):
         self.rmCards = []
+        self.garbageCards = []
         self.finshAnimation = 0
         self.root = root
         self.cards = []
@@ -270,11 +273,12 @@ class TableSpace:
                     x,
                     self.y
                 ),
+                0.5,
                 delay=time
             )
         return x # ultima posizione dove inserire la carta
     
-    def addCard(self, card : Card):
+    def addCard(self, card):
         self.cards.append(card)
         x = self.calculate()
         card.move(
@@ -282,27 +286,35 @@ class TableSpace:
                 x,
                 self.y
             ),
+            0.5,
             size= CARDS_TABLE_SIZE
         )
 
-    def removeCards(self, card):
+    def removeCards(self, card : Card, player):
         """ print(f"table.rmCards == {self.rmCards}")
         print(f"table.cards Prima == {[c.value for c in self.cards]}") """
         rmToRemove = []
+        y = 0
+        if(player == 1):
+            y = LOGO_Y + 100
+        else:
+            y = LOGO_Y - 100
         for i in self.rmCards:
             #rm = self.indexRm(self.rmCards[i])
             rmToRemove.append(i)
             #rm = self.cards.pop(i) QUI ELIMINO
             rm = self.cards[i] #QUI PRENDO LA CARTA
+            self.garbageCards.append(rm)
             if(rm):
                 rm.move(
                     (
                         R_WIDTH + self.size[0],
-                        self.y
-                    )
+                        y
+                    ),
+                    1
                 )
                 
-        card.move((R_WIDTH + self.size[0], self.y))
+        card.move((R_WIDTH + self.size[0], y), 1)
 
         rmToRemove.sort(reverse=True)
         #ordino gli indici delle carte da rimuovere e rimuovo le carte
@@ -326,10 +338,10 @@ class TableSpace:
             
     def destroyPickedCards(self, card):
         if(len(stop) == 0):
-            for i in self.rmCards + [card]:
+            for i in self.garbageCards + [card]:
                 if(i):
                     i.destroyCard()
-            self.rmCards = []
+            self.garbageCards = []
         
 
             

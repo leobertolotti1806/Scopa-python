@@ -1,6 +1,7 @@
 # config contiene customtkinter
 from config import *
 from forms.game import *
+from client import getHost
 
 class Login:
     def __init__(self, root : customtkinter.CTk):
@@ -18,7 +19,7 @@ class Login:
         )
         self.lbl.pack(pady=(100, 20), padx= 50)
 
-        self.lbl2 = customtkinter.CTkLabel(
+        self.lbl1 = customtkinter.CTkLabel(
             master=self.frame, 
             text="Benvenuto", 
             font=default_font_medium(), 
@@ -27,16 +28,26 @@ class Login:
             anchor="w",
             text_color=GREY
         )
-        self.lbl2.pack(pady= (0, 5), padx=50)
+        self.lbl1.pack(pady= (0, 5), padx=50)
 
-        self.txt1 = customtkinter.CTkEntry(
+        self.txtServer = customtkinter.CTkEntry(
+            master=self.frame, 
+            placeholder_text="IP Server", 
+            width=250,
+            height=50, 
+            font=default_font(),
+        )
+        self.txtServer.insert(0, getHost())
+        self.txtServer.pack(pady= 5, padx= 50)
+
+        self.txtName = customtkinter.CTkEntry(
             master=self.frame, 
             placeholder_text="inserisci il Nickname", 
             width=250,
             height=50, 
             font=default_font()
         )
-        self.txt1.pack(pady= 5, padx= 50)
+        self.txtName.pack(pady= 5, padx= 50)
 
         self.btnLogin = customtkinter.CTkButton(
             master=self.frame, 
@@ -51,9 +62,9 @@ class Login:
         self.btnLogin.pack(pady= (5, 100), padx = 50)
 
     def Enter(self):
-        if(self.txt1.get() != ""):
-            self.StartGame(self.txt1.get())
+        if(self.txtName.get() != ""):
+            self.StartGame(self.txtName.get(), self.txtServer.get())
 
-    def StartGame(self, user):
+    def StartGame(self, user, ip):
         self.frame.destroy()
-        Game(self.root, user)
+        Game(self.root, user, ip)

@@ -122,7 +122,7 @@ def avviaServer():
 # Metodo per Gestire i Messaggi in Arrivo dal CLIENT
 def partita(client1, client2, check1, check2, mazzo):
     game = {
-        "nMosse": 24,
+        "nMosse": 0,
         "err": False,
         "mazzo": mazzo,
         "lock": threading.Lock()

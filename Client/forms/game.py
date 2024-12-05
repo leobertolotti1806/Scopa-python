@@ -13,7 +13,7 @@ class Game:
     space2 = None
     table = None
 
-    def __init__(self, root : customtkinter.CTk, user):
+    def __init__(self, root : customtkinter.CTk, user, ip):
         system(f"title Prompt {user}")
         self.user = user
         self.root = root
@@ -25,7 +25,7 @@ class Game:
         
         self.msgBox = MessageBox(root=self.frame)
         self.msgBox.show()
-        client.waitForGame(self.user, self.InitGame, self.Error)
+        client.waitForGame(self.user, ip, self.InitGame, self.Error)
         self.animation = animation.AnimationText(self.root, self.msgBox.lbl, 300, [
             "In attesa di un giocatore.  ",
             "In attesa di un giocatore.. ",
@@ -92,7 +92,14 @@ class Game:
             
     def Error(self, msg):
         self.animation.stopAnimation()
-        self.msgBox.error(msg)
+        self.msgBox.error(
+            msg, 
+            {
+                "text": "Torna alla home",
+                "fg_color": RED,
+                "text_color": WHITE,
+                "command": lambda: client.home(self.frame)
+            })
 
     def BuildDrawCard(self, card):
         self.space1 = HandSpace(
@@ -157,7 +164,7 @@ class Game:
                     self.space2.calculate()
                 
                 client.sendMove(card.value, self.getCardsFromIndices(possibleMoves[0]))
-                self.execMove(card, possibleMoves[0])
+                self.execMove(card, possibleMoves[0], 1)
             else:
                 client.lastTake = True
                 #posso fare 2 o 2+ mosse
@@ -171,25 +178,25 @@ class Game:
             with client.lock:
                 client.turn = False
 
-            self.setStatus()
-
             
-    def execMove(self, card : Card, pickCard):
+    def execMove(self, card : Card, pickCard, player):
         # ora la carte che voglio giocare per proseguire devono aspettare lo stop
+
         self.table.rmCards = pickCard
 
         print(f"{Back.RED} {Fore.BLACK} Carte da rimuovere: {self.table.rmCards} {Back.BLACK} {Fore.WHITE}")
 
-        threading.Thread(target=self.renderMove, args=(card,)).start()
+        threading.Thread(target=self.renderMove, args=(card, player)).start()
         #merge del vettore delle carta più la carta stessa
 
-    def renderMove(self, card):
+    def renderMove(self, card,  player):
         for i in self.table.rmCards:
             self.table.cards[i].move(
                 (
                     self.table.cards[self.table.rmCards[0]].pos[0],
                     self.table.cards[self.table.rmCards[0]].pos[1]
                 ),
+                0.5,
                 size=CARDS_TABLE_SIZE
             )
         card.move(
@@ -197,6 +204,7 @@ class Game:
                 self.table.cards[self.table.rmCards[0]].pos[0],
                 self.table.cards[self.table.rmCards[0]].pos[1]
             ),
+            0.5,
             size=CARDS_TABLE_SIZE
         )
         stopAnimations.clear() # resetto lo stop
@@ -204,7 +212,7 @@ class Game:
         
         engagedCards = client.getValues(self.getCardsFromIndices(self.table.rmCards))
         #ANIMAZIONE
-        self.table.removeCards(card)
+        self.table.removeCards(card, player)
         
         tableCardValues = client.getValues(self.table.cards)
         print(f"[{self.user}]: engagedCards SALVATI IN INDICI: {engagedCards}")
@@ -232,7 +240,8 @@ class Game:
             MessageBox(self.frame, "Sette bello!",
                 WHITE, default_font_subtitle()).show(2)
             
-        #self.table.destroyPickedCards(card)
+        self.table.destroyPickedCards(card)
+        self.setStatus()
     
     def chooseMove(self, card, possibleMoves):
         #creare bottoni
@@ -294,7 +303,7 @@ class Game:
             self.space2.cards.remove(card)
             self.space2.calculate()
 
-        self.execMove(card, mossa)
+        self.execMove(card, mossa, 1)
         client.sendMove(card.value, self.getCardsFromIndices(mossa))
 
         self.btnMove.destroy()

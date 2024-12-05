@@ -3,6 +3,8 @@ import threading
 import json
 from itertools import permutations
 from card import *
+from os import path
+import animation
 
 # DA OGGETTO A STRINGA
 def stringifyObject(obj):
@@ -59,9 +61,17 @@ def home(root):
     root.destroy()
     from forms.login import Login
     Login(root.master)
-    
 
-Host = "192.168.178.24"
+
+def getHost():
+    global Indirizzo
+    global Host
+    if(path.exists('ip.txt')):
+        data = open('ip.txt', 'r')
+        ip = data.read()
+        data.close()
+    return ip
+
 Host = socket.gethostbyname(socket.gethostname())
 Porta = 9999
 Indirizzo = (Host, Porta)
@@ -83,7 +93,16 @@ points = {
 lastPlay = False
 lastTake = False
 
-def waitForGame(nickname, resolver, error):
+def waitForGame(nickname, ip, resolver, error):
+    global Host
+    global Indirizzo
+    if(Host != ip and ip != ""):
+        Host = ip
+        Indirizzo = (Host, Porta)
+    data = open('ip.txt', 'w')
+    data.write(Host)
+    data.close()
+
     threading.Thread(target=connect, args=(nickname, resolver, error)).start()
 
 def connect(nickname, resolver, error):
@@ -119,6 +138,7 @@ def waitMove(game):
     global startingTurn
     global lastTake
     endThread = False
+    carteRimanenti = 30
 
     inviaJSON({"request": "startGameOk"})
 
@@ -154,8 +174,9 @@ def waitMove(game):
 
                     game.execMove(
                         removedCard, # carta giocata dall'avversario
-                        tableCardsPicked
+                        tableCardsPicked,
                         #tableCardsPicked carte prese dall'avversario
+                        2
                     )
                     
 
@@ -164,6 +185,10 @@ def waitMove(game):
                       
             elif data["request"] == "newCards":
                 stopAnimations.clear()
+
+                carteRimanenti -= 6
+
+                game.lbldeck.configure(text = str(carteRimanenti))
 
                 if len(stop) != 0:
                     stopAnimations.wait()
