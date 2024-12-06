@@ -137,7 +137,6 @@ class Game:
     def clickCard(self, card : Card):
         if client.turn and len(stop) == 0:
             possibleMoves = client.getMoves(card.value, self.table.cards) #tipo per sapere la mossa da fare
-            #print(f"[{self.user}]: possibleMoves: {possibleMoves}")
                   
             if(len(possibleMoves) == 0):
                 #aggiungo la carta al tavolo
@@ -179,7 +178,7 @@ class Game:
                 client.turn = False
 
             
-    def execMove(self, card : Card, pickCard, player):
+    def execMove(self, card, pickCard, player):
         # ora la carte che voglio giocare per proseguire devono aspettare lo stop
 
         self.table.rmCards = pickCard
@@ -199,44 +198,54 @@ class Game:
                 0.5,
                 size=CARDS_TABLE_SIZE
             )
-        card.move(
-            (
-                self.table.cards[self.table.rmCards[0]].pos[0],
-                self.table.cards[self.table.rmCards[0]].pos[1]
-            ),
-            0.5,
-            size=CARDS_TABLE_SIZE
-        )
+
+        if card != None:
+            card.move(
+                (
+                    self.table.cards[self.table.rmCards[0]].pos[0],
+                    self.table.cards[self.table.rmCards[0]].pos[1]
+                ),
+                0.5,
+                size=CARDS_TABLE_SIZE
+            )
         stopAnimations.clear() # resetto lo stop
         stopAnimations.wait() # aspetto che mi arriva da qualche carta che sa di essere ultima un evento
         
         engagedCards = client.getValues(self.getCardsFromIndices(self.table.rmCards))
         #ANIMAZIONE
-        self.table.removeCards(card, player)
         
+        self.table.removeCards(card, player)
+    
         tableCardValues = client.getValues(self.table.cards)
-        print(f"[{self.user}]: engagedCards SALVATI IN INDICI: {engagedCards}")
-        print(f"[{self.user}]: tableCardValues: {tableCardValues}")
-        print(f"[{self.user}]: self.table.cards: {self.table.cards}")
-        print(f"[{self.user}]: card.value: {card.value}")
-
+        
         if ("D7" in engagedCards or
             "D7" == card.value) and len(tableCardValues) == 0:
             #scopa con settebello
-            print(f"[{self.user}]: Scopa con sette bello!")
+            if player == 1:
+                client.points["Sette bello"] = "Sì"
+                client.points["Scope1"] += 1
+            else:
+                client.points["Scope2"] += 1
+
             MessageBox(self.frame, "Scopa con sette bello!",
-                   WHITE, default_font_subtitle()).show(2)
+                WHITE, default_font_subtitle()).show(2)
 
         elif len(tableCardValues) == 0:
             #scopa
-            print(f"[{self.user}]: Scopa!")
+            if player == 1:
+                client.points["Scope1"] += 1
+            else:
+                client.points["Scope2"] += 1
+
             MessageBox(self.frame, "Scopa!",
                 WHITE, default_font_subtitle()).show(2)
             
         elif ("D7" in engagedCards or
             "D7" == card.value):
             #setteBello
-            print(f"[{self.user}]: Sette bello!")
+            if player == 1:
+                client.points["Sette bello"] = "Sì"
+
             MessageBox(self.frame, "Sette bello!",
                 WHITE, default_font_subtitle()).show(2)
             
@@ -318,7 +327,6 @@ class Game:
 
     
     def setStatus(self):
-        print(f"[{self.user}]: client.turn: {client.turn}")
         self.animation.stopAnimation()
         if(client.turn):
             self.lblstatus2.configure(text="")

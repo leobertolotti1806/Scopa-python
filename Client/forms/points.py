@@ -1,11 +1,12 @@
 from config import *
 
 class PointTable(customtkinter.CTkFrame):
-    def __init__(self, parent, pickedCards, points, names, home):
+    def __init__(self, parent, pickedCards, enemyPickedCards, points, names, home):
         super().__init__(parent)
 
         # Configura griglia con più spazio
         self.pickedCards = pickedCards
+        self.enemyPickedCards = enemyPickedCards
         self.names = names
         self.calculatePoints(points)
 
@@ -44,10 +45,10 @@ class PointTable(customtkinter.CTkFrame):
         self.enemyLabels[1].configure(text = "Sì" if self.points["Sette bello"] == "No" else "No")
 
         self.myLabels[2].configure(text = len(pickedCards) if self.points["Carte"] != "Pari" else "Pari")
-        self.enemyLabels[2].configure(text = 40 - self.points["Carte"] if self.points["Carte"] != "Pari" else "Pari")
+        self.enemyLabels[2].configure(text = len(enemyPickedCards) if self.points["Carte"] != "Pari" else "Pari")
 
-        self.myLabels[3].configure(text = self.points["Denari"])
-        self.enemyLabels[3].configure(text = 10 - self.points["Denari"] if self.points["Denari"] != "Pari" else "Pari")
+        self.myLabels[3].configure(text = self.points["Denari1"])
+        self.enemyLabels[3].configure(text = self.points["Denari2"])
 
         self.myLabels[4].configure(text = self.points["Primiera"])
         self.enemyLabels[4].configure(
@@ -87,12 +88,15 @@ class PointTable(customtkinter.CTkFrame):
         else:
             points["Carte"] = "Pari"
 
-        if points["Denari"] > 5:
+        self.calculateDenari(points)
+
+        if points["Denari1"] > points["Denari2"]:
             points["Totale1"] += 1
-        elif points["Denari"] < 5:
+        elif points["Denari1"] < points["Denari2"]:
             points["Totale2"] += 1
         else:
-            points["Denari"] = "Pari"
+            points["Denari1"] = "Pari"
+            points["Denari2"] = "Pari"
 
         self.calculatePrimiera(points)
 
@@ -100,7 +104,6 @@ class PointTable(customtkinter.CTkFrame):
             points["Totale1"] += 1
         elif points["Primiera"] == "No":
             points["Totale2"] += 1
-
 
         points["Totale1"] += points["Scope1"]
         points["Totale2"] += points["Scope2"]
@@ -138,3 +141,12 @@ class PointTable(customtkinter.CTkFrame):
                 points["Primiera"] = "No"
                 
             i += 1
+
+    def calculateDenari(self, points):
+        for c in self.pickedCards:
+            if c[0] == "D":
+                points["Denari1"] += 1
+
+        for c in self.enemyPickedCards:
+            if c[0] == "D":
+                points["Denari2"] += 1

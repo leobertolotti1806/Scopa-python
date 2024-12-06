@@ -146,6 +146,8 @@ def partita(client1, client2, check1, check2, mazzo):
         "user2": client1["nome"]
         }, client2["client"])
 
+    print(f"[partita di {client1['nome']} - {client2['nome']}]: avviata!")
+
     #Aspetto che i due client mi confermino di avviare la partita
     check1.join()
     check2.join()
@@ -171,7 +173,6 @@ def partita(client1, client2, check1, check2, mazzo):
     t2.join()
 
     if not game["err"]:
-        print("FACCIO CALCULATEPOINTS")
         inviaJSON({"request": "calculatePoints"}, [client1["client"], client2["client"]])
 
     client1["client"].close()
@@ -193,16 +194,15 @@ def pesca(game, nCarte):
     return carteScelte
 
 def mosse(client, cAvversario, game):
-    while not game["err"] and game["nMosse"] < 29:
+    while not game["err"] and game["nMosse"] < 35:
         # Riceve la mossa dal giocatore attuale
         mossa = riceviJSON(client["client"])
         print(f"[{client['nome']}]: Mossa ricevuta: {mossa}")
-        print(f"[{client['nome']}]: nMosse: {game['nMosse']}")
 
         if mossa["request"] == "move":
             # Invia la mossa all"altro giocatore
 
-            if game["nMosse"] == 28:
+            if game["nMosse"] == 34:
                 inviaJSON({"request": "viewLastPlay"}, 
                           [client["client"], cAvversario["client"]])
                 
@@ -212,7 +212,7 @@ def mosse(client, cAvversario, game):
                 game["nMosse"] += 1
 
             # Ogni 6 mosse termina il round
-            if game["nMosse"] % 6 == 0 and game["nMosse"] != 30:
+            if game["nMosse"] % 6 == 0 and game["nMosse"] != 36:
                 for cli in [client["client"], cAvversario["client"]]:
                     inviaJSON({
                         "request": "newCards",

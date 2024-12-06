@@ -84,11 +84,13 @@ startingTurn = False
 alreadyConnected = False
 #variabili per i punteggi
 pickedCards = []
+enemyPickedCards = []
 points = {
     "Scope1": 0,
     "Scope2": 0,
     "Sette bello": "No",
-    "Denari": 0
+    "Denari1": 0,
+    "Denari2": 0
 }
 lastPlay = False
 lastTake = False
@@ -126,7 +128,6 @@ def connect(nickname, resolver, error):
             resolver(riceviJson())
     else:
         #voglio rigiocare
-        """ client = None """
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect(Indirizzo)
         inviaJSON({"nome": nickname})
@@ -146,7 +147,6 @@ def waitMove(game):
 
         data = riceviJson()
         print(f"[{game.user}]: data = {data}")
-        print(f"[{game.user}]: lastTake = {lastTake}")
 
         if data != None:
             if data["request"] == "move":
@@ -158,11 +158,7 @@ def waitMove(game):
                 
                 # carte prese dall' avversario
                 tableCardsPicked = getIndexFromValues(game.table.cards, data["tableCardsPicked"])
-                print(f"[{game.user}]: tableCardsPicked in request: move = {tableCardsPicked}")
-
-                if len(game.table.cards) - len(tableCardsPicked):
-                    points["Scope2"] += 1
-
+                
                 game.space2.cards[0].value = data["cardPlayed"]
                 removedCard = game.space2.cards.pop(0)
                 game.space2.calculate()
@@ -178,10 +174,10 @@ def waitMove(game):
                         #tableCardsPicked carte prese dall'avversario
                         2
                     )
-                    
+                    enemyPickedCards.append(data["cardPlayed"])
 
-                if data["cardPlayed"] == "D7" or "D7" in data["tableCardsPicked"]:
-                    points["Sette bello"] = "Sì"
+                    for c in game.getCardsFromIndices(tableCardsPicked):
+                        enemyPickedCards.append(c.value)
                       
             elif data["request"] == "newCards":
                 stopAnimations.clear()
@@ -212,16 +208,34 @@ def waitMove(game):
                 stopAnimations.wait()
                 #aspetto tutte le animazioni
 
-                if lastTake and len(game.table.cards) != 0:
-                    print(f"[{game.user}]: devo prendere tutte le carte rimanenti")
+                carteRimanenti = 0
+
+                game.lbldeck.configure(text = str(carteRimanenti))
+
+                if len(game.table.cards) != 0:
+                    if lastTake:
+                        #prendo le carte rimanenti
+                        print(f"[{game.user}]: devo prendere tutte le carte rimanenti")
+                        for c in game.table.cards:
+                            pickedCards.append(c.value)
+                    else:
+                        #prende l'avversario le carte rimanenti
+                        for c in game.table.cards:
+                            enemyPickedCards.append(c.value)
 
                 turn = False #rendo non cliccabili le carte
                 from forms.points import PointTable
                 
-                tabella = PointTable(game.frame, pickedCards, points,
+                print(f"[{game.user}]: points = {points}")
+                print(f"[{game.user}]: pickedCard = {pickedCards}")
+                
+
+                tabella = PointTable(game.frame, pickedCards, enemyPickedCards, points,
                                      [game.user, game.user2], lambda: home(game.frame))
                 
                 tabella.place(relx=0.5, rely=0.5, anchor="center")
+
+
 
             elif data["request"] == "endGameError":
                 turn = False #rendo le carte NON cliccabili
@@ -266,12 +280,6 @@ def sendMove(card, move):
 
         for c in move:
             pickedCards.append(c)
-
-            if c[0] == "D":
-                points["Denari"] += 1
-
-        if card[0] == "D":
-            points["Denari"] += 1
 
 def getMoves(card, table):
     possibilities = []

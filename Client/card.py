@@ -118,7 +118,7 @@ class Card(CTkLabel):
                 time.sleep(self.frameDuration)#0.0025
                 timePassed += self.frameDuration
                 timePassed = round(timePassed, 2)
-                print(f"[{self.value}]: ",timePassed, "--", self.duration, f"currentPos:({x}, {y}) -- finalpos:({self.pos[0]}, {self.pos[1]})")
+                #print(f"[{self.value}]: ",timePassed, "--", self.duration, f"currentPos:({x}, {y}) -- finalpos:({self.pos[0]}, {self.pos[1]})")
 
     def move(self, p2, duration, delay = 0, size = "NaN", newValue="", msg=""):
         if(msg != ""):
@@ -342,15 +342,3 @@ class TableSpace:
                 if(i):
                     i.destroyCard()
             self.garbageCards = []
-        
-
-            
-            
-
-
-        
-
-
-    
-    
-
