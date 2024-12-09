@@ -290,7 +290,7 @@ class TableSpace:
             size= CARDS_TABLE_SIZE
         )
 
-    def removeCards(self, card : Card, player):
+    def removeCards(self, card, player):
         """ print(f"table.rmCards == {self.rmCards}")
         print(f"table.cards Prima == {[c.value for c in self.cards]}") """
         rmToRemove = []
@@ -313,10 +313,11 @@ class TableSpace:
                     ),
                     1
                 )
-                
-        card.move((R_WIDTH + self.size[0], y), 1)
+        
+        if card != None:
+            card.move((R_WIDTH + self.size[0], y), 1)
 
-        rmToRemove.sort(reverse=True)
+        rmToRemove.sort(reverse = True)
         #ordino gli indici delle carte da rimuovere e rimuovo le carte
         #da quella con indice maggiore verso quella con indice minore così
         #non si creano problemi con out of range

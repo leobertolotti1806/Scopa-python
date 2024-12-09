@@ -207,7 +207,7 @@ def waitMove(game):
                 stopAnimations.clear()
                 stopAnimations.wait()
                 #aspetto tutte le animazioni
-
+                game.setStatus(True)
                 carteRimanenti = 0
 
                 game.lbldeck.configure(text = str(carteRimanenti))
@@ -222,6 +222,14 @@ def waitMove(game):
                         #prende l'avversario le carte rimanenti
                         for c in game.table.cards:
                             enemyPickedCards.append(c.value)
+
+                    game.table.rmCards = getIndexFromValues(game.table.cards, 
+                                                            getValues(game.table.cards))
+                    
+                    game.renderMove(None, 1 if lastTake else 2)
+
+                    stopAnimations.clear()
+                    stopAnimations.wait()
 
                 turn = False #rendo non cliccabili le carte
                 from forms.points import PointTable

@@ -177,6 +177,8 @@ class Game:
             with client.lock:
                 client.turn = False
 
+            self.setStatus()
+
             
     def execMove(self, card, pickCard, player):
         # ora la carte che voglio giocare per proseguire devono aspettare lo stop
@@ -188,7 +190,7 @@ class Game:
         threading.Thread(target=self.renderMove, args=(card, player)).start()
         #merge del vettore delle carta più la carta stessa
 
-    def renderMove(self, card,  player):
+    def renderMove(self, card, player):
         for i in self.table.rmCards:
             self.table.cards[i].move(
                 (
@@ -217,40 +219,41 @@ class Game:
         self.table.removeCards(card, player)
     
         tableCardValues = client.getValues(self.table.cards)
-        
-        if ("D7" in engagedCards or
-            "D7" == card.value) and len(tableCardValues) == 0:
-            #scopa con settebello
-            if player == 1:
-                client.points["Sette bello"] = "Sì"
-                client.points["Scope1"] += 1
-            else:
-                client.points["Scope2"] += 1
 
-            MessageBox(self.frame, "Scopa con sette bello!",
-                WHITE, default_font_subtitle()).show(2)
+        if card != None:
+            if ("D7" in engagedCards or
+                "D7" == card.value) and len(tableCardValues) == 0:
+                #scopa con settebello
+                if player == 1:
+                    client.points["Sette bello"] = "Sì"
+                    client.points["Scope1"] += 1
+                else:
+                    client.points["Scope2"] += 1
 
-        elif len(tableCardValues) == 0:
-            #scopa
-            if player == 1:
-                client.points["Scope1"] += 1
-            else:
-                client.points["Scope2"] += 1
+                MessageBox(self.frame, "Scopa con sette bello!",
+                    WHITE, default_font_subtitle()).show(2)
 
-            MessageBox(self.frame, "Scopa!",
-                WHITE, default_font_subtitle()).show(2)
-            
-        elif ("D7" in engagedCards or
-            "D7" == card.value):
-            #setteBello
-            if player == 1:
-                client.points["Sette bello"] = "Sì"
+            elif len(tableCardValues) == 0:
+                #scopa
+                if player == 1:
+                    client.points["Scope1"] += 1
+                else:
+                    client.points["Scope2"] += 1
 
-            MessageBox(self.frame, "Sette bello!",
-                WHITE, default_font_subtitle()).show(2)
-            
-        self.table.destroyPickedCards(card)
-        self.setStatus()
+                MessageBox(self.frame, "Scopa!",
+                    WHITE, default_font_subtitle()).show(2)
+                
+            elif ("D7" in engagedCards or
+                "D7" == card.value):
+                #setteBello
+                if player == 1:
+                    client.points["Sette bello"] = "Sì"
+
+                MessageBox(self.frame, "Sette bello!",
+                    WHITE, default_font_subtitle()).show(2)
+                
+            self.table.destroyPickedCards(card)
+            self.setStatus()
     
     def chooseMove(self, card, possibleMoves):
         #creare bottoni
@@ -326,22 +329,27 @@ class Game:
             i.configure(bg_color="transparent")
 
     
-    def setStatus(self):
+    def setStatus(self, cancelText = False):
         self.animation.stopAnimation()
-        if(client.turn):
-            self.lblstatus2.configure(text="")
-            self.animation = animation.AnimationText(self.root, self.lblstatus1, 300, [
-                "Fai la tua mossa.  ",
-                "Fai la tua mossa.. ",
-                "Fai la tua mossa..."
-            ])
+
+        if not cancelText:
+            if(client.turn):
+                self.lblstatus2.configure(text="")
+                self.animation = animation.AnimationText(self.root, self.lblstatus1, 300, [
+                    "Fai la tua mossa.  ",
+                    "Fai la tua mossa.. ",
+                    "Fai la tua mossa..."
+                ])
+            else:
+                self.lblstatus1.configure(text="")
+                self.animation = animation.AnimationText(self.root, self.lblstatus2, 300, [
+                    "Sta pensando 😐",
+                    "Sta pensando 🤨",
+                    "Sta pensando 🤔"
+                ])
         else:
-            self.lblstatus1.configure(text="")
-            self.animation = animation.AnimationText(self.root, self.lblstatus2, 300, [
-                "Sta pensando 😐",
-                "Sta pensando 🤨",
-                "Sta pensando 🤔"
-            ])
+            self.lblstatus1.configure(text = "")
+            self.lblstatus2.configure(text = "")
 
     def getCardsFromIndices(self, indices):
         if isinstance(indices[0], list):
