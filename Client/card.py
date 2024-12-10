@@ -207,16 +207,18 @@ class HandSpace:
         #            spazio occuppato dalle carte    spazio margini
         xstart = centerX() - (spaceSize / 2)
         time = 0
+        duration = 0.5
 
         for i in range(len(self.cards)):
             if(delay != 0):
-                time = i
+                time = i / 2
+                duration = 1
             self.cards[i].move(
                 (
                     xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i),
                     self.y
                 ),
-                0.5,
+                duration,
                 delay= time
             )
             

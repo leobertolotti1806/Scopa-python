@@ -66,6 +66,7 @@ def home(root):
 def getHost():
     global Indirizzo
     global Host
+    ip = Host
     if(path.exists('ip.txt')):
         data = open('ip.txt', 'r')
         ip = data.read()
@@ -98,12 +99,13 @@ lastTake = False
 def waitForGame(nickname, ip, resolver, error):
     global Host
     global Indirizzo
-    if(Host != ip and ip != ""):
-        Host = ip
-        Indirizzo = (Host, Porta)
-    data = open('ip.txt', 'w')
-    data.write(Host)
-    data.close()
+    if(Host != ip):
+        if(ip != ""):
+            Host = ip
+            Indirizzo = (Host, Porta)
+        data = open('ip.txt', 'w')
+        data.write(Host)
+        data.close()
 
     threading.Thread(target=connect, args=(nickname, resolver, error)).start()
 
