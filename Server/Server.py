@@ -41,7 +41,21 @@ mazzoOrdinato = [
 ]
 
 def riceviJSON(client, qta = 1024):
-    return parseObject(client.recv(qta).decode("utf-8"))
+    errore = False
+    data = None
+
+    try:
+        data = client.recv(qta)
+    except (ConnectionResetError):
+        errore = True
+
+    """ if not errore:
+        return parseObject(data.decode("utf-8"))
+    else:
+        print("ERRORE")
+        return {"request": "closingClient"}
+ """
+    return parseObject(data.decode("utf-8")) if not errore else {"request": "closingClient"}
 
 def inviaJSON(messaggio, client):
     messaggio = stringifyObject(messaggio).encode()
@@ -61,10 +75,10 @@ def checkClient(client):
     while not endThread:
         obj = riceviJSON(client["client"])
 
-        if obj["request"] == "startGameOk" or obj["request"] == "stopWaiting":
+        if obj["request"] == "startGameOk" or obj["request"] == "stopWaiting" or obj["request"] == "closingClient":
             endThread = True
 
-    if obj["request"] == "stopWaiting":
+    if obj["request"] == "stopWaiting" or obj["request"] == "closingClient":
         print(f"[checkClient di {client['nome']}]: Chiudo il client [{client['nome']}] e rimuovo la connessione al server")
 
         client["client"].close()
@@ -122,7 +136,7 @@ def avviaServer():
 # Metodo per Gestire i Messaggi in Arrivo dal CLIENT
 def partita(client1, client2, check1, check2, mazzo):
     game = {
-        "nMosse": 0,
+        "nMosse": 30,
         "err": False,
         "mazzo": mazzo,
         "lock": threading.Lock()
@@ -133,8 +147,8 @@ def partita(client1, client2, check1, check2, mazzo):
     inviaJSON({
         "request": "startGame",
         "startingTurn": True,
-        "table": ["B2"],#"table": tavolo,
-        "cards" : ["B2"],#"cards": pesca(game, 3),
+        "table": tavolo,
+        "cards": pesca(game, 3),
         "user2": client2["nome"]
         }, client1["client"])
 

@@ -80,6 +80,7 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 lock = threading.Lock()
 
 waitMoveThread = threading.Thread()
+
 turn = False
 startingTurn = False
 alreadyConnected = False
@@ -95,6 +96,7 @@ points = {
 }
 lastPlay = False
 lastTake = False
+
 
 def waitForGame(nickname, ip, resolver, error):
     global Host

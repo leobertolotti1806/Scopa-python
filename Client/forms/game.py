@@ -87,8 +87,6 @@ class Game:
         self.setStatus()
         client.waitMoveThread = threading.Thread(target=client.waitMove, args=(self,))
         client.waitMoveThread.start()
-
-        client.deck = obj["cards"]
             
     def Error(self, msg):
         self.animation.stopAnimation()
