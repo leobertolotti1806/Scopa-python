@@ -57,10 +57,10 @@ def chiusura(root):
 
     root.destroy()
 
-def home(root):
+def home(root, user=""):
     root.destroy()
     from forms.login import Login
-    Login(root.master)
+    Login(root.master, user=user)
 
 
 def getHost():
@@ -96,7 +96,8 @@ points = {
 }
 lastPlay = False
 lastTake = False
-
+waitFinishGame = threading.Event()
+waitingFinish = False
 
 def waitForGame(nickname, ip, resolver, error):
     global Host
@@ -142,6 +143,7 @@ def waitMove(game):
     global turn
     global startingTurn
     global lastTake
+    global waitingFinish
     endThread = False
     carteRimanenti = 30
 
@@ -208,8 +210,14 @@ def waitMove(game):
                 
             elif data["request"] == "calculatePoints":
                 endThread = True
-                stopAnimations.clear()
-                stopAnimations.wait()
+                waitingFinish = True # faccio sapere al renderMove che io sto aspettando lui per calcolare i punti
+                #print(Fore.RED + "si sono ancora movimenti aspetto prima di terminare il gioco" + Fore.RED)
+                if game.renderingMove:    
+                    print("aspetto la calculatepoints")
+                    waitFinishGame.wait()
+                if len(stop) != 0:
+                    stopAnimations.clear()
+                    stopAnimations.wait()
                 #aspetto tutte le animazioni
                 game.setStatus(True)
                 carteRimanenti = 0
@@ -219,7 +227,7 @@ def waitMove(game):
                 if len(game.table.cards) != 0:
                     if lastTake:
                         #prendo le carte rimanenti
-                        print(f"[{game.user}]: devo prendere tutte le carte rimanenti")
+                        #print(f"[{game.user}]: devo prendere tutte le carte rimanenti")
                         for c in game.table.cards:
                             pickedCards.append(c.value)
                     else:
@@ -230,7 +238,7 @@ def waitMove(game):
                     game.table.rmCards = getIndexFromValues(game.table.cards, 
                                                             getValues(game.table.cards))
                     
-                    game.renderMove(None, 1 if lastTake else 2)
+                    game.renderMove(None, 1 if lastTake else 2, "prendo le carte rimaste")
 
                 turn = False #rendo non cliccabili le carte
                 from forms.points import PointTable
@@ -240,7 +248,7 @@ def waitMove(game):
                 
 
                 tabella = PointTable(game.frame, pickedCards, enemyPickedCards, points,
-                                     [game.user, game.user2], lambda: home(game.frame))
+                                     [game.user, game.user2], lambda: home(game.frame, game.user))
                 
                 tabella.place(relx=0.5, rely=0.5, anchor="center")
 
@@ -260,7 +268,7 @@ def waitMove(game):
                         "text": "Torna alla home",
                         "fg_color": RED,
                         "text_color": WHITE,
-                        "command": lambda: home(game.frame)
+                        "command": lambda: home(game.frame, game.user)
                     })
 
                 msgBox.show()

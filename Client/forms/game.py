@@ -17,6 +17,7 @@ class Game:
         system(f"title Prompt {user}")
         self.user = user
         self.root = root
+        self.renderingMove = False
         self.frame = customtkinter.CTkFrame(master=root,  fg_color=BACK_COLOR)
         self.frame.grid(row = 0, column = 0)
         self.frame.pack(fill="both", expand=True)
@@ -35,6 +36,7 @@ class Game:
 
     #questo significa che sto definendo la funzione da eseguire prima di fare l'init game
     def InitGame(self, obj):
+        print(self.user, "connesso!!")
         self.animation.stopAnimation()
         self.msgBox.close()
         self.user2 = obj["user2"]
@@ -96,7 +98,7 @@ class Game:
                 "text": "Torna alla home",
                 "fg_color": RED,
                 "text_color": WHITE,
-                "command": lambda: client.home(self.frame)
+                "command": lambda: client.home(self.frame, self.user)
             })
 
     def BuildDrawCard(self, card):
@@ -160,8 +162,8 @@ class Game:
                     self.space2.cards.remove(card)
                     self.space2.calculate()
                 
-                client.sendMove(card.value, self.getCardsFromIndices(possibleMoves[0]))
                 self.execMove(card, possibleMoves[0], 1)
+                client.sendMove(card.value, self.getCardsFromIndices(possibleMoves[0]))
             else:
                 client.lastTake = True
                 #posso fare 2 o 2+ mosse
@@ -185,10 +187,12 @@ class Game:
 
         print(f"{Back.RED} {Fore.BLACK} Carte da rimuovere: {self.table.rmCards} {Back.BLACK} {Fore.WHITE}")
 
-        threading.Thread(target=self.renderMove, args=(card, player)).start()
+        threading.Thread(target=self.renderMove, args=(card, player, "eseguo mossa")).start()
         #merge del vettore delle carta più la carta stessa
 
-    def renderMove(self, card, player):
+    def renderMove(self, card, player, msg=""):
+        self.renderingMove = True
+        print(msg)
         for i in self.table.rmCards:
             self.table.cards[i].move(
                 (
@@ -254,6 +258,13 @@ class Game:
 
             #self.table.destroyPickedCards(card)
 
+            print("mando la calculatepoints?", client.waitingFinish, len(self.space1.cards) == 0, len(self.space2.cards) == 0)
+            if(client.waitingFinish and len(self.space1.cards) == 0 and len(self.space2.cards) == 0):
+                if(len(stop) != 0):
+                    stopAnimations.clear()
+                    stopAnimations.wait()
+                client.waitFinishGame.set()
+            self.renderingMove = False
             self.setStatus()
     
     def chooseMove(self, card, possibleMoves):

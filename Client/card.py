@@ -101,15 +101,12 @@ class Card(CTkLabel):
         while timePassed != self.duration and timePassed < self.duration:
             if(not rect.error):
                 if(posX < x):
-                    print("entro ramo 1")
                     x -= self.frameDis
                     y = rect.getY(x)
                 elif(posX > x):
-                    print("entro ramo 2")
                     x += self.frameDis
                     y = rect.getY(x)
             else:
-                print("entro ramo verticale")
                 if(posY < y):
                     y -= self.frameDis
                 else:
@@ -274,7 +271,7 @@ class TableSpace:
         for i in range(len(self.cards)):
             x = xstart + (self.size[0] / 2) + ((self.size[0] + 10) * i)
             if(delay != 0):
-                time = (1 * i)
+                time = i / 2
             self.cards[i].move(
                 (
                     x,

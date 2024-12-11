@@ -4,8 +4,9 @@ from forms.game import *
 from client import getHost
 
 class Login:
-    def __init__(self, root : customtkinter.CTk):
+    def __init__(self, root : customtkinter.CTk, user = ""):
         self.root = root
+        self.user = user
         self.frame = customtkinter.CTkFrame(master=root, bg_color=BACK_COLOR, corner_radius=15)
         self.frame.pack(padx=50, pady=50, expand=True)
         self.build()
@@ -47,6 +48,8 @@ class Login:
             height=50, 
             font=default_font()
         )
+        if(self.user != ""):
+            self.txtName.insert(0, self.user)
         self.txtName.pack(pady= 5, padx= 50)
 
         self.btnLogin = customtkinter.CTkButton(
