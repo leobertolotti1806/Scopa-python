@@ -1,9 +1,24 @@
 # SCOPA online
 
-## Grafica - da fare
-- gestire la distuzione della carta dopo che è stata usata
-- animazioni giocatore 2
-- message box (scopa, settebello, punteggi)
+<img src="Client/media/logo.png">
+di Luca Cadoni e Leonardo Bertolotti
 
-## Grafica - da correggere
-- choose Move che dopo aver fatto la mossa muove una carta già tolta
+## Set up
+
+per far funzionare correttamente il gioco (da codice sorgente) è necessario **installare le seguenti librerie**
+
+```
+pip install cutomtkinter
+pip install pyllow
+pip intall colorama
+```
+
+
+## Come giocare
+- avviare il server se non è presente
+- avviare il file **main.py**
+- inserire l'ip del server e il proprio nickname
+- aspettare la connesione di un altro giocatore
+
+## Avvertenze
+_è possibile che ci siano cali di frame dovuti all'ineguatezza di tkinter per sviluppo grafico_
