@@ -95,30 +95,32 @@ class Card(CTkLabel):
 
     def animation(self, x, y, rect : Rect):
         print(Back.CYAN + Fore.BLUE + f"{self.value}:" + Fore.WHITE + f" ha iniziato a percorrere la retta:" + Fore.GREEN + f" y = {rect.m}x + {rect.q}" + Fore.WHITE + Back.BLACK, end="\n")
-        if(not rect.error):
-            timePassed = 0
-            posX = self.pos[0]
-            posY = self.pos[1]
-            while timePassed != self.duration and timePassed < self.duration:
-                #print(x)
+        timePassed = 0
+        posX = self.pos[0]
+        posY = self.pos[1]
+        while timePassed != self.duration and timePassed < self.duration:
+            if(not rect.error):
                 if(posX < x):
+                    print("entro ramo 1")
                     x -= self.frameDis
                     y = rect.getY(x)
                 elif(posX > x):
+                    print("entro ramo 2")
                     x += self.frameDis
                     y = rect.getY(x)
-                elif(rect.imp):
-                    if(posY < y):
-                        y -= self.frameDis
-                    else:
-                        y += self.frameDis
+            else:
+                print("entro ramo verticale")
+                if(posY < y):
+                    y -= self.frameDis
+                else:
+                    y += self.frameDis
 
-                #self._update_image()
-                self.place(x=x, y=y, anchor="center")
-                time.sleep(self.frameDuration)#0.0025
-                timePassed += self.frameDuration
-                timePassed = round(timePassed, 2)
-                #print(f"[{self.value}]: ",timePassed, "--", self.duration, f"currentPos:({x}, {y}) -- finalpos:({self.pos[0]}, {self.pos[1]})")
+            #self._update_image()
+            self.place(x=x, y=y, anchor="center")
+            time.sleep(self.frameDuration)#0.0025
+            timePassed += self.frameDuration
+            timePassed = round(timePassed, 2)
+            #print(f"[{self.value}]: ",timePassed, "--", self.duration, f"currentPos:({x}, {y}) -- finalpos:({self.pos[0]}, {self.pos[1]})")
 
     def move(self, p2, duration, delay = 0, size = "NaN", newValue="", msg=""):
         if(msg != ""):
@@ -161,8 +163,11 @@ class Card(CTkLabel):
     def destroyCard(self):
         self.stopCard = True
         self.eventAnimation.set()
-        self.closedCard.wait()
-        self.destroy()
+        self.closedCard.wait(10)
+        try:
+            self.destroy()
+        except:
+            print(f"[{self.value}]: err in destroying")
 
 class HandSpace:
 
@@ -319,12 +324,15 @@ class TableSpace:
         if card != None:
             card.move((R_WIDTH + self.size[0], y), 1)
 
+        stopAnimations.clear()
+        stopAnimations.wait()
         rmToRemove.sort(reverse = True)
         #ordino gli indici delle carte da rimuovere e rimuovo le carte
         #da quella con indice maggiore verso quella con indice minore così
         #non si creano problemi con out of range
         for i in rmToRemove:
             #print(f"faccio la pop di sel.cards.pop(i), i = {i}")
+            self.cards[i].destroy()
             self.cards.pop(i)
         
         """ print(f"table.rmCards == {self.rmCards}")

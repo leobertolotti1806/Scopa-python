@@ -133,8 +133,8 @@ def partita(client1, client2, check1, check2, mazzo):
     inviaJSON({
         "request": "startGame",
         "startingTurn": True,
-        "table": tavolo,
-        "cards": pesca(game, 3),
+        "table": ["B2"],#"table": tavolo,
+        "cards" : ["B2"],#"cards": pesca(game, 3),
         "user2": client2["nome"]
         }, client1["client"])
 

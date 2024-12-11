@@ -230,9 +230,6 @@ def waitMove(game):
                     
                     game.renderMove(None, 1 if lastTake else 2)
 
-                    stopAnimations.clear()
-                    stopAnimations.wait()
-
                 turn = False #rendo non cliccabili le carte
                 from forms.points import PointTable
                 

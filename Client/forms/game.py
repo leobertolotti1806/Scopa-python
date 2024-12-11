@@ -223,6 +223,7 @@ class Game:
         if card != None:
             if ("D7" in engagedCards or
                 "D7" == card.value) and len(tableCardValues) == 0:
+                self.table.cards = []
                 #scopa con settebello
                 if player == 1:
                     client.points["Sette bello"] = "Sì"
@@ -234,6 +235,7 @@ class Game:
                     WHITE, default_font_subtitle()).show(2)
 
             elif len(tableCardValues) == 0:
+                self.table.cards = []
                 #scopa
                 if player == 1:
                     client.points["Scope1"] += 1
@@ -251,8 +253,9 @@ class Game:
 
                 MessageBox(self.frame, "Sette bello!",
                     WHITE, default_font_subtitle()).show(2)
-                
-            self.table.destroyPickedCards(card)
+
+            #self.table.destroyPickedCards(card)
+
             self.setStatus()
     
     def chooseMove(self, card, possibleMoves):
