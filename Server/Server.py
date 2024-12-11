@@ -49,12 +49,6 @@ def riceviJSON(client, qta = 1024):
     except (ConnectionResetError):
         errore = True
 
-    """ if not errore:
-        return parseObject(data.decode("utf-8"))
-    else:
-        print("ERRORE")
-        return {"request": "closingClient"}
- """
     return parseObject(data.decode("utf-8")) if not errore else {"request": "closingClient"}
 
 def inviaJSON(messaggio, client):
@@ -136,7 +130,7 @@ def avviaServer():
 # Metodo per Gestire i Messaggi in Arrivo dal CLIENT
 def partita(client1, client2, check1, check2, mazzo):
     game = {
-        "nMosse": 30,
+        "nMosse": 0,
         "err": False,
         "mazzo": mazzo,
         "lock": threading.Lock()
@@ -211,7 +205,7 @@ def mosse(client, cAvversario, game):
     while not game["err"] and game["nMosse"] < 35:
         # Riceve la mossa dal giocatore attuale
         mossa = riceviJSON(client["client"])
-        print(f"[{client['nome']}]: Mossa ricevuta: {mossa}")
+        print(f"[{client['nome']}]: {mossa}")
 
         if mossa["request"] == "move":
             # Invia la mossa all"altro giocatore
@@ -246,7 +240,5 @@ def mosse(client, cAvversario, game):
                 game["err"] = True
 
             print(f"[{client['nome']}]: Il client avversario [{cAvversario['nome']}] ha terminato la partita e confermo l'uscita")
-
-    print(f"[{client['nome']}]: FINISCO PARTITA")
 
 avviaServer()

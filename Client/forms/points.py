@@ -143,6 +143,9 @@ class PointTable(customtkinter.CTkFrame):
             i += 1
 
     def calculateDenari(self, points):
+        points["Denari1"] = 0
+        points["Denari2"] = 0
+
         for c in self.pickedCards:
             if c[0] == "D":
                 points["Denari1"] += 1

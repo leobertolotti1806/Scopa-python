@@ -327,10 +327,20 @@ class TableSpace:
         #ordino gli indici delle carte da rimuovere e rimuovo le carte
         #da quella con indice maggiore verso quella con indice minore così
         #non si creano problemi con out of range
+        print(f"PRIMA DI TOGLIERE self.cards = {self.cards}")
         for i in rmToRemove:
             #print(f"faccio la pop di sel.cards.pop(i), i = {i}")
-            self.cards[i].destroy()
-            self.cards.pop(i)
+            self.cards[i].destroyCard()
+
+            if i >= 0 or i < len(self.cards):
+                self.cards.pop(i)
+            else:
+                print("ERRORE DI INDICE")
+                print(f"i = {i}")
+                print(f"rmToRemove = {rmToRemove}")
+                print(f"NELL ERRORE self.cards = {self.cards}")
+
+        print(f"DOPO self.cards = {self.cards}")
         
         """ print(f"table.rmCards == {self.rmCards}")
         print(f"table.cards Dopo == {[c.value for c in self.cards]}") """
@@ -342,11 +352,3 @@ class TableSpace:
                 x = self.cards[i]
                 self.cards.remove(self.cards[i])
                 return x
-
-            
-    def destroyPickedCards(self, card):
-        if(len(stop) == 0):
-            for i in self.garbageCards + [card]:
-                if(i):
-                    i.destroyCard()
-            self.garbageCards = []

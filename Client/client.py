@@ -58,6 +58,7 @@ def chiusura(root):
     root.destroy()
 
 def home(root, user=""):
+    resettaVariabili()
     root.destroy()
     from forms.login import Login
     Login(root.master, user=user)
@@ -81,12 +82,35 @@ lock = threading.Lock()
 
 waitMoveThread = threading.Thread()
 
+def resettaVariabili():
+    global turn
+    global startingTurn
+    global alreadyConnected
+    global lastPlay
+    global lastTake
+    global waitFinishGame
+
+    turn = False
+    startingTurn = False
+    
+    points = {
+        "Scope1": 0,
+        "Scope2": 0,
+        "Sette bello": "No",
+        "Denari1": 0,
+        "Denari2": 0
+    }
+    lastPlay = False
+    lastTake = False
+    waitFinishGame = threading.Event()
+    waitMoveThread = threading.Thread()
+    waitingFinish = False
+
 turn = False
 startingTurn = False
 alreadyConnected = False
 #variabili per i punteggi
 pickedCards = []
-enemyPickedCards = []
 points = {
     "Scope1": 0,
     "Scope2": 0,
@@ -144,6 +168,8 @@ def waitMove(game):
     global startingTurn
     global lastTake
     global waitingFinish
+    enemyPickedCards = []
+    global pickedCards
     endThread = False
     carteRimanenti = 30
 
@@ -217,7 +243,7 @@ def waitMove(game):
                     waitFinishGame.wait()
                 if len(stop) != 0:
                     stopAnimations.clear()
-                    stopAnimations.wait()
+                    stopAnimations.wait(5)
                 #aspetto tutte le animazioni
                 game.setStatus(True)
                 carteRimanenti = 0
@@ -252,7 +278,8 @@ def waitMove(game):
                 
                 tabella.place(relx=0.5, rely=0.5, anchor="center")
 
-
+                pickedCards = []
+                enemyPickedCards = []
 
             elif data["request"] == "endGameError":
                 turn = False #rendo le carte NON cliccabili
